@@ -17,7 +17,7 @@
 
 ## Key Engineering Decisions
 
-- Selected **GPT-4o-mini** as primary model due to context handling, speed, and low operational cost (<$5/mo during dev).
+- Selected **Gemini 1.5 Flash** because it has a generous free tier (useful for a student project with no budget), a large context window, and fast response times — a good fit for a support agent that needs to stay in role, refuse out-of-scope requests, and follow a strict output format.
 - Established prompt iteration workflows prior to retrieval augmented generation (RAG) implementation to isolate baseline model behaviors.
 - Upgraded system prompt from `v1.0` to `v1.1` to enforce security constraints against prompt injection and out-of-scope queries.
 
