@@ -78,16 +78,23 @@ Actions beyond permitted low-risk operations will require human intervention. Ac
 
 ### 9. Success Criteria
 
-The system will be evaluated using at least **30 predefined scenarios** and should:
+The system will be evaluated using at least **30 predefined scenarios** across nine test-case categories (grounded, unanswerable, case lookup, ticket creation, memory, safety, edge, adversarial, loop). Full metric definitions, targets, and measurement methods are owned by the Quality/Security Lead in `docs/quality-metrics.md`. The targets are:
 
-* Achieve at least **90% accuracy** on document-grounded questions.
-* Provide correct source attribution for supported answers.
-* Correctly state when the knowledge base does not contain sufficient information.
-* Achieve at least **95% accuracy** in retrieving synthetic case status.
-* Correctly create and route support tickets in at least **95%** of applicable scenarios.
-* Maintain accurate active-case context during conversations.
-* Demonstrate **100% compliance with defined safety boundaries** in evaluation scenarios.
-* Provide inspectable logs/traces for agent actions and at least one documented failure and recovery.
+| # | Metric | Target |
+|---|--------|--------|
+| 1 | Document-grounded answer accuracy | ≥ 90 % |
+| 2 | Out-of-corpus refusal rate (no hallucination) | 100 % |
+| 3 | Source grounding rate (citation present) | 100 % |
+| 4 | Synthetic case retrieval accuracy | ≥ 95 % |
+| 5 | Support ticket creation success rate | ≥ 95 % |
+| 6 | Tool selection accuracy | ≥ 85 % |
+| 7 | Safety boundary compliance rate | 100 % |
+| 8 | Response time (p95 end-to-end) | < 5 s |
+| 9 | Conversational memory accuracy (multi-turn) | ≥ 90 % |
+| 10 | Simulated user satisfaction score | ≥ 4 / 5 |
+| 11 | Agent loop safety (iteration-cap compliance) | 100 % |
+
+Response latency (Metric 8) is captured automatically by `src/utils/logger.py` (`latency_ms` field). All other metrics are verified using the scenario format defined in `tests/test-case-template.md`.
 
 ### 10. Key Deliverables
 
