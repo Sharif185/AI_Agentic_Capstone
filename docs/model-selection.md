@@ -17,6 +17,8 @@ Compare candidate foundation models for the University Student-Support Case Agen
 - **Access:** Free-tier API key from Google AI Studio — no course credits or payment needed to get started
 - **Weakness:** Slightly less consistent reasoning on multi-constraint instructions (role + refusal + tone) than GPT-4o-mini in early testing — addressed via prompt iteration in Week 2 (v1.0 → v1.1)
 
+Note: Gemini 1.5 Flash was selected as primary (not GPT-4o-mini) due to free-tier access with no course budget; this matches the model actually used in Week 2 testing (see tests/week2-evaluation-table.md).
+
 ### 2. GPT-4o-mini
 - **Strengths:** Strong instruction-following and reasoning; good at structured output (JSON, tables); handles multi-turn conversation well; 128K context window
 - **Cost:** $0.15 / 1M input tokens, $0.60 / 1M output tokens — estimated <$5/month during development
