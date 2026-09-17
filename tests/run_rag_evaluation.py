@@ -202,13 +202,28 @@ def run_rag_evaluation():
             question=tc["question"]
         )
 
-        # 3. Generate response
-        model_result = model.generate(formatted_prompt, tc["question"])
+        # 3. Generate response (retry up to 3 times on transient server errors)
+        model_result = None
+        for attempt in range(3):
+            try:
+                model_result = model.generate(formatted_prompt, tc["question"])
+                break
+            except Exception as e:
+                error_str = str(e)
+                if attempt < 2 and ("503" in error_str or "429" in error_str or "UNAVAILABLE" in error_str):
+                    wait = 30 * (attempt + 1)
+                    print(f"  Server busy, retrying in {wait}s (attempt {attempt+1}/3)...")
+                    import time; time.sleep(wait)
+                else:
+                    raise
         response_text = model_result["response"]
         tokens_used = model_result["usage"]["total_tokens"]
 
         print(f"  Response (preview): {response_text[:200]}...")
         print(f"  Tokens used       : {tokens_used}")
+
+        # Small pause between questions to avoid rate limits
+        import time; time.sleep(4)
 
         # 4. Collect result record
         results.append({
