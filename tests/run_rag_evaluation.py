@@ -178,7 +178,22 @@ def run_rag_evaluation():
     # ------------------------------------------------------------------
     pipeline = RAGPipeline()
     pipeline.retriever = None  # Will load vector store lazily on first query
+
+    # Fallback model list — rotate when one hits its daily quota (429)
+    MODEL_ROTATION = [
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
+        "gemini-3.1-flash-lite-preview",
+        "gemini-flash-lite-latest",
+    ]
+    current_model_idx = 0
+
+    import os
+    os.environ["MODEL_NAME"] = MODEL_ROTATION[current_model_idx]
     model = ModelClient()
+    print(f"Using model: {MODEL_ROTATION[current_model_idx]}")
+
     system_prompt = load_prompt("v2.0")
 
     results = []
@@ -202,13 +217,40 @@ def run_rag_evaluation():
             question=tc["question"]
         )
 
-        # 3. Generate response
-        model_result = model.generate(formatted_prompt, tc["question"])
+        # 3. Generate response — auto-rotate models on daily quota exhaustion
+        model_result = None
+        for attempt in range(5):
+            try:
+                model_result = model.generate(formatted_prompt, tc["question"])
+                break
+            except Exception as e:
+                error_str = str(e)
+                # Daily quota exhausted — switch to next model immediately
+                if "429" in error_str and "GenerateRequestsPerDay" in error_str:
+                    current_model_idx += 1
+                    if current_model_idx < len(MODEL_ROTATION):
+                        new_model = MODEL_ROTATION[current_model_idx]
+                        print(f"  Daily quota exhausted, switching to: {new_model}")
+                        import os
+                        os.environ["MODEL_NAME"] = new_model
+                        model = ModelClient()
+                    else:
+                        print("  All models exhausted for today.")
+                        raise
+                elif attempt < 4 and ("503" in error_str or "429" in error_str or "UNAVAILABLE" in error_str or "RESOURCE_EXHAUSTED" in error_str or "ConnectError" in error_str or "getaddrinfo" in error_str):
+                    wait = 60 * (attempt + 1)
+                    print(f"  Server busy, waiting {wait}s before retry (attempt {attempt+1}/5)...")
+                    import time; time.sleep(wait)
+                else:
+                    raise
         response_text = model_result["response"]
         tokens_used = model_result["usage"]["total_tokens"]
 
         print(f"  Response (preview): {response_text[:200]}...")
         print(f"  Tokens used       : {tokens_used}")
+
+        # Short pause between questions to be kind to the API
+        import time; time.sleep(10)
 
         # 4. Collect result record
         results.append({

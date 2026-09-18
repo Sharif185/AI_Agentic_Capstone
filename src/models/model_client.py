@@ -64,16 +64,16 @@ class ModelClient:
                 }
             }
 
-        # Gemini path
-        response = self.client.models.generate_content(
+        # Gemini path — use Chat API (recommended for newer models)
+        chat = self.client.chats.create(
             model=self.model_name,
-            contents=user_message,
             config=self._genai_types.GenerateContentConfig(
                 system_instruction=system_prompt,
                 temperature=temp,
                 max_output_tokens=self.max_tokens
             )
         )
+        response = chat.send_message(user_message)
 
         usage = getattr(response, "usage_metadata", None)
         prompt_tokens = getattr(usage, "prompt_token_count", 0) if usage else 0

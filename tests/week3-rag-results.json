@@ -5,15 +5,17 @@
     "question": "When is the registration deadline for Semester 1 2026/2027?",
     "expected_source": "Academic Calendar 2026/2027",
     "expected_outcome": "Specific date provided",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Academic Calendar 2026/2027.pdf",
-      "Registration Guidelines.pdf",
-      "Course Handbook 2026/2027.pdf"
+      "academic-calendar.md",
+      "academic-calendar.md",
+      "academic-calendar.md",
+      "course-handbook-2026-2027.pdf",
+      "README.md"
     ],
-    "response": "According to the Academic Calendar 2026/2027, the registration deadline for Semester 1 2026/2027 is 3rd October 2026. Students who have not completed registration by this date will be required to apply for late registration and may incur a late registration fee.\n\nSource: Academic Calendar 2026/2027",
-    "tokens_used": 187,
-    "run_timestamp": "2026-09-17T10:14:22.451203"
+    "response": "I don't have that information in my current documents. \n\nWould you like me to",
+    "tokens_used": 2512,
+    "run_timestamp": "2026-09-18T09:57:51.225392"
   },
   {
     "id": "R02",
@@ -21,15 +23,17 @@
     "question": "What are the prerequisites for BSE4104?",
     "expected_source": "Course Handbook 2026/2027",
     "expected_outcome": "Course codes listed",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Course Handbook 2026/2027.pdf",
-      "Sample Course Descriptions.json",
-      "Sample Course Timetable.csv"
+      "bsse-program-overview.md",
+      "bsse-program-overview.md",
+      "bsse-program-overview.md",
+      "bsse-program-overview.md",
+      "README.md"
     ],
-    "response": "According to the Course Handbook 2026/2027, the prerequisites for BSE4104 (Emerging Trends in Software Engineering) are:\n\n- BSE3101 — Software Architecture and Design\n- BSE3203 — Advanced Software Engineering\n- BSE3105 — Research Methods in Software Engineering\n\nStudents must have passed all three courses before enrolling in BSE4104.\n\nSource: Course Handbook 2026/2027",
-    "tokens_used": 203,
-    "run_timestamp": "2026-09-17T10:14:35.812044"
+    "response": "I don't have that information in my current documents. \n\nThe current",
+    "tokens_used": 1803,
+    "run_timestamp": "2026-09-18T09:58:05.882264"
   },
   {
     "id": "R03",
@@ -37,15 +41,17 @@
     "question": "How many credits does BSE4104 have?",
     "expected_source": "Course Handbook 2026/2027",
     "expected_outcome": "Credit number stated",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Course Handbook 2026/2027.pdf",
-      "Sample Course Descriptions.json",
-      "Fee Structure 2026/2027.pdf"
+      "bsse-program-overview.md",
+      "bsse-program-overview.md",
+      "bsse-program-overview.md",
+      "bsse-program-overview.md",
+      "README.md"
     ],
-    "response": "According to the Course Handbook 2026/2027, BSE4104 (Emerging Trends in Software Engineering) carries 4 credit units.\n\nSource: Course Handbook 2026/2027",
-    "tokens_used": 142,
-    "run_timestamp": "2026-09-17T10:14:48.229817"
+    "response": "I don't have that information in my current documents. \n\nWould you like me to",
+    "tokens_used": 1806,
+    "run_timestamp": "2026-09-18T09:58:20.118177"
   },
   {
     "id": "R04",
@@ -55,15 +61,15 @@
     "expected_outcome": "Step-by-step procedure listed",
     "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Study Leave Policy.pdf",
-      "Registration Guidelines.pdf",
-      "Course Handbook 2026/2027.pdf",
-      "Academic Calendar 2026/2027.pdf",
-      "Student Support Services Brochure.pdf"
+      "examinations-policy.md",
+      "grading-policy.md",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "examinations-policy.md"
     ],
-    "response": "According to the Study Leave Policy, the procedure for applying for study leave is as follows:\n\n1. Obtain a Study Leave Application Form from the Academic Registrar's office or the university portal.\n2. Complete the form, including the reason for study leave, the proposed duration, and the supervising lecturer's details.\n3. Obtain endorsement from your Head of Department.\n4. Submit the completed form to the Dean of your Faculty at least four (4) weeks before the intended leave start date.\n5. The Dean forwards the application to the Academic Registrar for final approval.\n6. You will receive written notification of the outcome within two (2) weeks of submission.\n7. Approved study leave must be renewed each semester if it extends beyond one semester.\n\nSource: Study Leave Policy",
-    "tokens_used": 298,
-    "run_timestamp": "2026-09-17T10:15:04.663120"
+    "response": "I don't have that information in my current documents. \nWould you like me to create a support ticket?",
+    "tokens_used": 2197,
+    "run_timestamp": "2026-09-18T09:58:33.469634"
   },
   {
     "id": "R05",
@@ -71,15 +77,17 @@
     "question": "What are the examination regulations regarding late submission?",
     "expected_source": "Examination Regulations",
     "expected_outcome": "Policy on late submission described",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Examination Regulations.pdf",
-      "Academic Integrity Policy.pdf",
-      "Course Handbook 2026/2027.pdf"
+      "examinations-policy.md",
+      "examinations-policy.md",
+      "examinations-policy.md",
+      "examinations-policy.md",
+      "examinations-policy.md"
     ],
-    "response": "According to the Examination Regulations, late submission of coursework is penalised as follows:\n\n- Submissions made up to 24 hours after the deadline will receive a 10% deduction of the total marks available.\n- Submissions made between 24 and 48 hours after the deadline will receive a 25% deduction.\n- Submissions made more than 48 hours after the deadline will receive a mark of zero (0) unless an approved extension has been granted.\n\nStudents who require an extension must apply to their course lecturer in writing before the submission deadline. Extensions are granted only for documented medical or compassionate reasons.\n\nSource: Examination Regulations",
-    "tokens_used": 264,
-    "run_timestamp": "2026-09-17T10:15:19.004581"
+    "response": "I don't have that information in my current documents. \nWould you like me to create a support ticket?",
+    "tokens_used": 1553,
+    "run_timestamp": "2026-09-18T09:58:48.512255"
   },
   {
     "id": "R06",
@@ -87,15 +95,17 @@
     "question": "What support services are available for students?",
     "expected_source": "Student Support Services Brochure",
     "expected_outcome": "List of available services",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Student Support Services Brochure.pdf",
-      "Counseling Services Guide.pdf",
-      "Library Services Guide.pdf"
+      "examinations-policy.md",
+      "course-handbook-2026-2027.pdf",
+      "README.md",
+      "grading-policy.md",
+      "grading-policy.md"
     ],
-    "response": "According to the Student Support Services Brochure, the following support services are available to students at Makerere University:\n\n- **Academic Support**: Tutoring, study skills workshops, and academic advising\n- **Counselling Services**: Individual and group counselling for personal and academic challenges\n- **Financial Aid**: Bursaries, scholarships, and emergency financial assistance\n- **Health Services**: Medical clinic and mental health support on campus\n- **Library Services**: Physical and digital library resources, research assistance\n- **ICT Services**: Computer labs, internet access, and technical support\n- **Career Services**: CV writing, job placement, and internship coordination\n- **Disability Support**: Accessibility accommodations and assistive resources\n\nSource: Student Support Services Brochure",
-    "tokens_used": 289,
-    "run_timestamp": "2026-09-17T10:15:33.771342"
+    "response": "I don't have that information in my current documents. \nWould you like me to create a support ticket?",
+    "tokens_used": 1721,
+    "run_timestamp": "2026-09-18T09:59:02.347427"
   },
   {
     "id": "R07",
@@ -103,15 +113,17 @@
     "question": "What is the fee structure for Year 4 BSE?",
     "expected_source": "Fee Structure 2026/2027",
     "expected_outcome": "Fee amounts stated",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Fee Structure 2026/2027.pdf",
-      "Registration Guidelines.pdf",
-      "Academic Calendar 2026/2027.pdf"
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf"
     ],
-    "response": "According to the Fee Structure 2026/2027, the fees for Year 4 Bachelor of Software Engineering (BSE) students are as follows:\n\n- **Tuition Fees**: UGX 1,650,000 per semester\n- **Functional Fees**: UGX 462,000 per semester (includes ICT levy, library, medical, and student guild fees)\n- **Examination Fees**: UGX 120,000 per semester\n- **Total per Semester**: UGX 2,232,000\n- **Total per Academic Year**: UGX 4,464,000\n\nNote: Fees are payable at the beginning of each semester before registration is confirmed.\n\nSource: Fee Structure 2026/2027",
-    "tokens_used": 276,
-    "run_timestamp": "2026-09-17T10:15:47.119654"
+    "response": "M7R 5 ...\"\nDoc 3: \"2,874,",
+    "tokens_used": 4409,
+    "run_timestamp": "2026-09-18T09:59:19.123777"
   },
   {
     "id": "R08",
@@ -119,15 +131,17 @@
     "question": "What is the academic integrity policy on plagiarism?",
     "expected_source": "Academic Integrity Policy",
     "expected_outcome": "Plagiarism policy summarised",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Academic Integrity Policy.pdf",
-      "Examination Regulations.pdf",
-      "Course Handbook 2026/2027.pdf"
+      "examinations-policy.md",
+      "examinations-policy.md",
+      "README.md",
+      "examinations-policy.md",
+      "examinations-policy.md"
     ],
-    "response": "According to the Academic Integrity Policy, plagiarism is defined as presenting someone else's work, ideas, or words as your own without proper acknowledgement. The policy applies to all submitted coursework, dissertations, research papers, and examinations.\n\nPenalties for plagiarism are applied on a tiered basis:\n- **First offence (minor)**: Written warning and requirement to resubmit the work with a grade cap of 50%.\n- **First offence (major)**: Zero mark for the affected assessment.\n- **Repeat offence**: Referral to the Faculty Disciplinary Committee, which may recommend suspension or expulsion.\n\nAll submitted work may be run through plagiarism detection software. Students are required to sign an academic integrity declaration with every submission.\n\nSource: Academic Integrity Policy",
-    "tokens_used": 312,
-    "run_timestamp": "2026-09-17T10:16:01.882203"
+    "response": "[Direct answer based on context]\n     \n    Source: [Document name]",
+    "tokens_used": 1694,
+    "run_timestamp": "2026-09-18T09:59:33.736586"
   },
   {
     "id": "R09",
@@ -135,15 +149,17 @@
     "question": "Can I register late for courses?",
     "expected_source": "Registration Guidelines",
     "expected_outcome": "Late registration policy stated; specific dates flagged as missing",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Registration Guidelines.pdf",
-      "Academic Calendar 2026/2027.pdf",
-      "Fee Structure 2026/2027.pdf"
+      "examinations-policy.md",
+      "grading-policy.md",
+      "grading-policy.md",
+      "course-handbook-2026-2027.pdf",
+      "course-handbook-2026-2027.pdf"
     ],
-    "response": "According to the Registration Guidelines, late registration is permitted subject to the approval of the Academic Registrar. Students who miss the standard registration deadline may apply for late registration by submitting a Late Registration Request Form to the Registrar's office. A late registration fee applies.\n\nHowever, I don't have the specific late registration dates for Semester 1 2026/2027 in my current documents. The Academic Calendar may contain these dates, but the specific section was not retrieved. I would recommend checking the full Academic Calendar on the university portal or contacting the Registrar's office directly.\n\nWould you like me to create a support ticket for this query?\n\nSource: Registration Guidelines",
-    "tokens_used": 248,
-    "run_timestamp": "2026-09-17T10:16:15.344017"
+    "response": "I don't have that information in my current documents. \n\nWould you like me",
+    "tokens_used": 1821,
+    "run_timestamp": "2026-09-18T09:59:48.271545"
   },
   {
     "id": "R10",
@@ -151,15 +167,17 @@
     "question": "How do I get a transcript?",
     "expected_source": "Registration Guidelines",
     "expected_outcome": "General procedure described; specific office location flagged as missing",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Registration Guidelines.pdf",
-      "Student Support Services Brochure.pdf",
-      "ICT Services Guide.pdf"
+      "README.md",
+      "grading-policy.md",
+      "README.md",
+      "grading-policy.md",
+      "academic-calendar.md"
     ],
-    "response": "According to the Registration Guidelines, to request an official transcript you should:\n\n1. Submit a Transcript Request Form to the Academic Registrar's office.\n2. Pay the prescribed transcript fee at the Finance office.\n3. Attach your payment receipt to the completed form.\n4. Allow 5–10 working days for processing.\n\nNote: I don't have the specific physical location of the Academic Registrar's office in my current documents. For the exact room number or building, please check the university website or contact the main university information desk.\n\nWould you like me to create a support ticket for this query?\n\nSource: Registration Guidelines",
-    "tokens_used": 232,
-    "run_timestamp": "2026-09-17T10:16:29.907441"
+    "response": "I don't have that information in my current documents. \n\nWould you like me",
+    "tokens_used": 1635,
+    "run_timestamp": "2026-09-18T10:00:02.722025"
   },
   {
     "id": "R11",
@@ -167,15 +185,17 @@
     "question": "What are the requirements for graduation?",
     "expected_source": "Course Handbook 2026/2027",
     "expected_outcome": "Credit requirements described; specific GPA rules flagged as missing",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Course Handbook 2026/2027.pdf",
-      "Examination Regulations.pdf",
-      "Academic Calendar 2026/2027.pdf"
+      "course-handbook-2026-2027.pdf",
+      "course-handbook-2026-2027.pdf",
+      "course-handbook-2026-2027.pdf",
+      "course-handbook-2026-2027.pdf",
+      "grading-policy.md"
     ],
-    "response": "According to the Course Handbook 2026/2027, to be eligible for graduation in the Bachelor of Software Engineering programme, a student must:\n\n- Complete a minimum of 240 credit units across all four years of study.\n- Pass all core (compulsory) courses.\n- Complete an approved Final Year Project.\n- Have no outstanding fees at the time of graduation clearance.\n\nHowever, I don't have the specific minimum GPA or classification boundaries (e.g., First Class, Upper Second) in my current documents. These details may be in the Examination Regulations document but were not retrieved. Please consult your Faculty Office or the full Examination Regulations for classification criteria.\n\nWould you like me to create a support ticket for this query?\n\nSource: Course Handbook 2026/2027",
-    "tokens_used": 271,
-    "run_timestamp": "2026-09-17T10:16:44.218763"
+    "response": "I don't have that information in my current documents. \nWould you like me to create",
+    "tokens_used": 2051,
+    "run_timestamp": "2026-09-18T10:00:17.607948"
   },
   {
     "id": "R12",
@@ -183,15 +203,17 @@
     "question": "How do I appeal a grade?",
     "expected_source": "Examination Regulations",
     "expected_outcome": "Appeal process described; specific timelines flagged as missing",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Examination Regulations.pdf",
-      "Academic Integrity Policy.pdf",
-      "Course Handbook 2026/2027.pdf"
+      "grading-policy.md",
+      "grading-policy.md",
+      "grading-policy.md",
+      "examinations-policy.md",
+      "grading-policy.md"
     ],
-    "response": "According to the Examination Regulations, the grade appeal process is as follows:\n\n1. Submit a written appeal to your Head of Department, clearly stating the grounds for the appeal.\n2. The Head of Department will arrange for the work to be re-marked by a different assessor.\n3. If you are not satisfied with the outcome, you may escalate the appeal to the Faculty Appeals Committee.\n4. The Committee's decision is final.\n\nNote: I don't have the specific deadlines for submitting a grade appeal in my current documents. The exact number of days after results release within which an appeal must be lodged was not present in the retrieved sections. Please contact the Examinations Office or your Faculty for the current timelines.\n\nWould you like me to create a support ticket for this query?\n\nSource: Examination Regulations",
-    "tokens_used": 259,
-    "run_timestamp": "2026-09-17T10:16:58.551892"
+    "response": "To appeal a grade, you must submit an appeal in writing within 3",
+    "tokens_used": 2059,
+    "run_timestamp": "2026-09-18T10:00:32.999559"
   },
   {
     "id": "R13",
@@ -199,15 +221,17 @@
     "question": "What is the VC's phone number?",
     "expected_source": null,
     "expected_outcome": "Model says: I don't have that information in my current documents.",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Student Support Services Brochure.pdf",
-      "ICT Services Guide.pdf",
-      "Counseling Services Guide.pdf"
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "course-handbook-2026-2027.pdf",
+      "README.md",
+      "examinations-policy.md"
     ],
-    "response": "I don't have that information in my current documents. The Vice Chancellor's personal contact details are not included in any of the university documents in my current corpus.\n\nWould you like me to create a support ticket for this query?",
-    "tokens_used": 118,
-    "run_timestamp": "2026-09-17T10:17:11.004618"
+    "response": "I don't have that information in my current documents. \nWould you like me to create a support ticket?",
+    "tokens_used": 2707,
+    "run_timestamp": "2026-09-18T10:00:46.502786"
   },
   {
     "id": "R14",
@@ -215,15 +239,17 @@
     "question": "How many students failed BSE4104 last year?",
     "expected_source": null,
     "expected_outcome": "Model says: I don't have that information in my current documents.",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Course Handbook 2026/2027.pdf",
-      "Sample Course Descriptions.json",
-      "Examination Regulations.pdf"
+      "bsse-program-overview.md",
+      "grading-policy.md",
+      "grading-policy.md",
+      "grading-policy.md",
+      "course-handbook-2026-2027.pdf"
     ],
-    "response": "I don't have that information in my current documents. Historical examination statistics and student pass/fail rates are not included in any of the documents in my current corpus.\n\nWould you like me to create a support ticket for this query?",
-    "tokens_used": 112,
-    "run_timestamp": "2026-09-17T10:17:23.337084"
+    "response": "I don't have that information in my current documents. \n\nWould you like me to",
+    "tokens_used": 2812,
+    "run_timestamp": "2026-09-18T10:01:00.987077"
   },
   {
     "id": "R15",
@@ -231,14 +257,16 @@
     "question": "What is the recipe for matooke?",
     "expected_source": null,
     "expected_outcome": "Model says: I don't have that information in my current documents.",
-    "retrieved_chunks": 3,
+    "retrieved_chunks": 5,
     "sources_retrieved": [
-      "Student Support Services Brochure.pdf",
-      "Library Services Guide.pdf",
-      "Sample Student FAQ.md"
+      "README.md",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "course-handbook-2026-2027.pdf",
+      "Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf",
+      "course-handbook-2026-2027.pdf"
     ],
-    "response": "I don't have that information in my current documents. This question is outside the scope of the university student support documents in my corpus. I can only assist with questions related to academic programmes, fees, registration, examinations, and student services at Makerere University.\n\nWould you like me to create a support ticket for this query?",
-    "tokens_used": 134,
-    "run_timestamp": "2026-09-17T10:17:35.661902"
+    "response": "I don't have that information in my current documents. \n\nWould you like me to create a support ticket?",
+    "tokens_used": 2509,
+    "run_timestamp": "2026-09-18T10:01:14.731762"
   }
 ]
