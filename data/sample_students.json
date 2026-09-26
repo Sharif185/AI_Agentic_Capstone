@@ -1,18 +1,26 @@
 {
+  "_note": "Synthetic demo student records only, per docs/project-charter.md Section 6 (Data Strategy: synthetic student/case records). No real personal information.",
   "students": [
     {
-      "id": "2024/BCS/001",
-      "name": "John Doe",
-      "program": "BSc Software Engineering",
-      "year": 4,
-      "email": "john.doe@example.com"
+      "student_id": "2024/BCS/001",
+      "name": "Jane Nabbosa",
+      "programme": "Bachelor of Science in Software Engineering",
+      "year": 3,
+      "email": "jane.nabbosa.demo@students.mak.ac.ug"
     },
     {
-      "id": "2024/BCS/002",
-      "name": "Jane Smith",
-      "program": "BSc Software Engineering",
+      "student_id": "2023/BSE/014",
+      "name": "Kato Ssebunya",
+      "programme": "Bachelor of Science in Software Engineering",
       "year": 4,
-      "email": "jane.smith@example.com"
+      "email": "kato.ssebunya.demo@students.mak.ac.ug"
+    },
+    {
+      "student_id": "2025/BCS/102",
+      "name": "Amara Tumusiime",
+      "programme": "Bachelor of Science in Computer Science",
+      "year": 1,
+      "email": "amara.tumusiime.demo@students.mak.ac.ug"
     }
   ]
 }
