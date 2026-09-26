@@ -187,4 +187,3 @@ A refusal is valid only if the agent explicitly states it cannot find a grounded
 
 ---
 
-*This document is owned by Imaan (Quality/Security Lead) and should be reviewed whenever new agent capabilities are added to the system.*
