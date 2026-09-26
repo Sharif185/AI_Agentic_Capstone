@@ -1,0 +1,38 @@
+[
+  {
+    "student_id": "2024/BSE/001",
+    "name": "Amara Nakato",
+    "program": "Bachelor of Software Engineering",
+    "year": 4,
+    "semester": 1,
+    "enrolled_courses": ["BSE4104", "BSE3101"],
+    "email": "amara.nakato@students.mak.ac.ug"
+  },
+  {
+    "student_id": "2024/BSE/002",
+    "name": "David Ochieng",
+    "program": "Bachelor of Software Engineering",
+    "year": 3,
+    "semester": 1,
+    "enrolled_courses": ["BSE3101", "BSE3102"],
+    "email": "david.ochieng@students.mak.ac.ug"
+  },
+  {
+    "student_id": "2024/BSE/003",
+    "name": "Fatima Ssali",
+    "program": "Bachelor of Software Engineering",
+    "year": 2,
+    "semester": 2,
+    "enrolled_courses": ["BSE3102", "CS103"],
+    "email": "fatima.ssali@students.mak.ac.ug"
+  },
+  {
+    "student_id": "2024/BSE/004",
+    "name": "Peter Mugisha",
+    "program": "Bachelor of Software Engineering",
+    "year": 1,
+    "semester": 1,
+    "enrolled_courses": ["CS103"],
+    "email": "peter.mugisha@students.mak.ac.ug"
+  }
+]

@@ -1,0 +1,77 @@
+{
+  "run_at": "2026-09-26T12:28:33.028068",
+  "summary": {
+    "passed": 11,
+    "failed": 0,
+    "errors": 0,
+    "total": 11
+  },
+  "tests": [
+    {
+      "test_id": "TC-01",
+      "description": "Missing course_code \u2192 executor-level error",
+      "status": "PASS",
+      "details": "success=False, error=course_code is required"
+    },
+    {
+      "test_id": "TC-02",
+      "description": "Missing issue_summary \u2192 executor-level error",
+      "status": "PASS",
+      "details": "success=False, error=issue_summary is required"
+    },
+    {
+      "test_id": "TC-03",
+      "description": "Missing student_name \u2192 executor-level error",
+      "status": "PASS",
+      "details": "success=False, error=student_name is required"
+    },
+    {
+      "test_id": "TC-05",
+      "description": "Invalid course code \u2192 tool-level 'not found'",
+      "status": "PASS",
+      "details": "success=False, result_error=Course INVALID999 not found"
+    },
+    {
+      "test_id": "TC-06",
+      "description": "Invalid info_type \u2192 tool-level enum error",
+      "status": "PASS",
+      "details": "success=False, result_error=info_type must be one of: prerequisites, credits, schedule, description, all"
+    },
+    {
+      "test_id": "TC-07",
+      "description": "Issue summary > 500 chars \u2192 tool-level error",
+      "status": "PASS",
+      "details": "success=False, result_error=issue_summary exceeds 500 characters"
+    },
+    {
+      "test_id": "TC-08",
+      "description": "Invalid priority enum \u2192 tool-level error",
+      "status": "PASS",
+      "details": "success=False, result_error=priority must be low, medium, or high"
+    },
+    {
+      "test_id": "TC-09",
+      "description": "auto_approve=True \u2192 ticket created successfully",
+      "status": "PASS",
+      "details": "success=True, ticket_id=TICKET-0002"
+    },
+    {
+      "test_id": "TC-10",
+      "description": "auto_approve=False, non-interactive \u2192 denied",
+      "status": "PASS",
+      "details": "success=False, error=Human approval denied"
+    },
+    {
+      "test_id": "TC-12",
+      "description": "Missing courses.json \u2192 'database unavailable'",
+      "status": "PASS",
+      "details": "success=False, result_error=Course database unavailable"
+    },
+    {
+      "test_id": "TC-14",
+      "description": "Unknown tool name \u2192 'not found' error",
+      "status": "PASS",
+      "details": "success=False, error=Tool unknown_tool not found"
+    }
+  ]
+}
