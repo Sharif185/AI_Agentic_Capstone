@@ -1,1 +1,14 @@
+# Data
+data/tickets.db
+*.db
+ 
+# Environment
 .env
+ 
+# Vector store
+knowledge/vectordb/
+ 
+# Python
+__pycache__/
+*.pyc
+venv/
