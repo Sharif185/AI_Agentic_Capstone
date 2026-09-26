@@ -1,0 +1,47 @@
+{
+  "BSE4104": {
+    "code": "BSE4104",
+    "name": "Emerging Trends in Software Engineering",
+    "credits": 4,
+    "description": "Covers AI-native and agentic engineering, foundation models, RAG, tools, and bounded autonomy.",
+    "prerequisites": ["BSE3101", "BSE3102", "CS103"],
+    "schedule": {
+      "lectures": "Monday 10:00-12:00, Wednesday 14:00-16:00",
+      "venue": "Block B, Room 204"
+    },
+    "instructor": "Dr Kamulegeya Grace B"
+  },
+  "BSE3101": {
+    "code": "BSE3101",
+    "name": "Software Architecture",
+    "credits": 3,
+    "description": "Principles of software architecture and design patterns.",
+    "prerequisites": ["BSE2101", "BSE2102"],
+    "schedule": {
+      "lectures": "Tuesday 08:00-10:00",
+      "venue": "Block A, Room 101"
+    }
+  },
+  "BSE3102": {
+    "code": "BSE3102",
+    "name": "Database Systems",
+    "credits": 3,
+    "description": "Relational and NoSQL database design and implementation.",
+    "prerequisites": ["BSE2103"],
+    "schedule": {
+      "lectures": "Thursday 10:00-12:00",
+      "venue": "Block C, Room 305"
+    }
+  },
+  "CS103": {
+    "code": "CS103",
+    "name": "Discrete Mathematics",
+    "credits": 3,
+    "description": "Foundations of discrete mathematics for computer science.",
+    "prerequisites": [],
+    "schedule": {
+      "lectures": "Friday 08:00-10:00",
+      "venue": "Block A, Room 105"
+    }
+  }
+}

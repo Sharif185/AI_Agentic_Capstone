@@ -93,3 +93,44 @@ A: No. Exam deferrals must be approved by your Principal/Dean's office with supp
 
 **Q: What is the VC's phone number?**  
 A: That information is not in my current documents. For direct contact details, visit the Makerere University website at mak.ac.ug or the university's main information desk.
+
+---
+
+## Fees Structure
+
+**Q: What is the fee structure for BSE (Bachelor of Science in Software Engineering) students?**  
+A: According to the Makerere University 2024/2025 fees structure, for the Bachelor of Science in Software Engineering (BSW) under the College of Computing and Information Sciences (CoCIS):
+
+- **Ugandans and East Africans tuition fee:** UGX 1,977,138 per semester
+- **International students tuition fee:** UGX 3,840,209 per semester
+- **Duration:** 4 years
+
+In addition, the following functional fees apply to all Makerere University students:
+- Semester One functional fee: UGX 860,954
+- Semester Two functional fee: UGX 132,250
+- National Council for Higher Education fee: UGX 20,000 per year
+- UNSA Subscription fee: UGX 2,000 per year
+- Internship/Field Attachment fee: UGX 100,000 per semester (Year 1, Semester 1 and 2 only)
+
+*(Source: Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf)*
+
+**Q: What are the functional fees at Makerere University?**  
+A: The functional fees for Makerere University students are:
+- Semester One: UGX 860,954
+- Semester Two: UGX 132,250
+- National Council for Higher Education fees: UGX 20,000 per year
+- UNSA Subscription: UGX 2,000 per year
+
+For Makerere University Business School (MUBS) students, the functional fee is UGX 858,650 per semester (paid once for both semesters).
+
+*(Source: Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf)*
+
+**Q: How do I apply to Makerere University?**  
+A: Applications are done online through the Makerere University Admissions portal at **http://apply.mak.ac.ug**. Steps:
+1. Sign up using your full name, email, and mobile number
+2. A password will be sent to your email and phone
+3. Click "Apply Now" on the running scheme
+4. Obtain a payment advice slip by clicking "Pay for Form"
+5. Pay the application fee (UGX 50,000 for Ugandans/East Africans, $75 for internationals) at any URA bank or via Mobile Money by dialling *272*6#
+
+*(Source: Mak-Undergraduate-Programmes-Fees-Structure-2024-2025AY.pdf)*

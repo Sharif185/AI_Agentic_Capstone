@@ -1,0 +1,92 @@
+{
+  "run_at": "2026-09-26T12:28:38.858125",
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4
+  },
+  "scenarios": [
+    {
+      "scenario_id": "S-01",
+      "description": "Course prerequisites query via get_course_info",
+      "status": "PASS",
+      "details": "success=True, prerequisites=['BSE3101', 'BSE3102', 'CS103']",
+      "result": {
+        "success": true,
+        "course_code": "BSE4104",
+        "info_type": "prerequisites",
+        "data": {
+          "prerequisites": [
+            "BSE3101",
+            "BSE3102",
+            "CS103"
+          ]
+        }
+      }
+    },
+    {
+      "scenario_id": "S-02",
+      "description": "Support ticket creation with approval gate (auto-approved)",
+      "status": "PASS",
+      "details": "success=True, ticket_id=TICKET-0002, approval_gate_fired=True",
+      "result": {
+        "success": true,
+        "ticket_id": "TICKET-0002",
+        "status": "open",
+        "message": "Ticket TICKET-0002 created successfully",
+        "ticket": {
+          "ticket_id": "TICKET-0002",
+          "student_name": "Amara Nakato",
+          "student_id": null,
+          "issue_summary": "My name is spelled incorrectly on my academic transcript",
+          "priority": "high",
+          "category": "academic",
+          "status": "open",
+          "created_at": "2026-09-26T12:28:38.841843",
+          "updated_at": "2026-09-26T12:28:38.841843"
+        }
+      }
+    },
+    {
+      "scenario_id": "S-03",
+      "description": "Lowercase course code normalized to uppercase",
+      "status": "PASS",
+      "details": "success=True, course_code_in='bse4104', credits=4",
+      "result": {
+        "success": true,
+        "course_code": "BSE4104",
+        "info_type": "credits",
+        "data": {
+          "credits": 4
+        }
+      }
+    },
+    {
+      "scenario_id": "S-04",
+      "description": "Whitespace-padded course code handled correctly",
+      "status": "PASS",
+      "details": "success=True, course_code_in='  BSE4104  ', name='Emerging Trends in Software Engineering'",
+      "result": {
+        "success": true,
+        "course_code": "BSE4104",
+        "info_type": "all",
+        "data": {
+          "code": "BSE4104",
+          "name": "Emerging Trends in Software Engineering",
+          "credits": 4,
+          "description": "Covers AI-native and agentic engineering, foundation models, RAG, tools, and bounded autonomy.",
+          "prerequisites": [
+            "BSE3101",
+            "BSE3102",
+            "CS103"
+          ],
+          "schedule": {
+            "lectures": "Monday 10:00-12:00, Wednesday 14:00-16:00",
+            "venue": "Block B, Room 204"
+          },
+          "instructor": "Dr Kamulegeya Grace B"
+        }
+      }
+    }
+  ]
+}
