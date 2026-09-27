@@ -1,5 +1,12 @@
 import json
 import os
+import sys
+from dotenv import load_dotenv
+
+# Resolve project root regardless of where the script is called from
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
+
 from models.model_client import ModelClient
 from rag.pipeline import RAGPipeline
 from tools.course_tool import CourseTool
@@ -8,12 +15,12 @@ from tools.approval_controller import ApprovalController
 from tools.tool_executor import ToolExecutor
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 
 def load_prompt(version="v1.1"):
     """Load system prompt from file."""
-    prompt_path = f"prompts/system-prompt-{version}.txt"
+    prompt_path = os.path.join(PROJECT_ROOT, "prompts", f"system-prompt-{version}.txt")
     with open(prompt_path, "r") as f:
         return f.read()
 
