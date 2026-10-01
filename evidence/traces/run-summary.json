@@ -1,0 +1,32 @@
+{
+  "scenarios": [
+    {
+      "id": "TRACE-001",
+      "goal": "I want to register for BSE4104. What do I need?",
+      "iterations": 2,
+      "stop_reason": "goal_achieved",
+      "limits_ok": true,
+      "trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-001.json",
+      "response_preview": "To register for BSE4104, you need to have completed the following prerequisite courses: BSE3101, BSE3102, and CS103."
+    },
+    {
+      "id": "TRACE-002",
+      "goal": "What are the prerequisites for XYZ999?",
+      "iterations": 2,
+      "stop_reason": "Planner could not parse decision",
+      "limits_ok": true,
+      "trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-002.json",
+      "response_preview": "I wasn't able to fully resolve your issue. Would you like me to create a support ticket?"
+    },
+    {
+      "id": "TRACE-003",
+      "goal": "I have a problem.",
+      "iterations": 1,
+      "stop_reason": "goal_achieved",
+      "limits_ok": true,
+      "trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-003.json",
+      "response_preview": "I'm sorry to hear that. Could you please describe the problem or issue you are experiencing so I can help you resolve it?"
+    }
+  ],
+  "all_limits_respected": true
+}

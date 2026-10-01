@@ -1,0 +1,12 @@
+{
+  "trace_id": "TRACE-003",
+  "goal": "I have a problem.",
+  "started_at": "2026-10-01T12:01:26.954574",
+  "iterations": [],
+  "tool_calls": [],
+  "rag_calls": [],
+  "human_approvals": [],
+  "final_response": "I'm sorry to hear that. Could you please describe the problem or issue you are experiencing so I can help you resolve it?",
+  "stop_reason": "goal_achieved",
+  "completed_at": "2026-10-01T12:01:51.008005"
+}

@@ -1,0 +1,45 @@
+{
+  "trace_id": "TRACE-002",
+  "goal": "What are the prerequisites for XYZ999?",
+  "started_at": "2026-10-01T12:00:45.991734",
+  "iterations": [
+    {
+      "iteration": 1,
+      "action": "call_tool",
+      "plan": {
+        "action": "call_tool",
+        "tool": "get_course_info",
+        "arguments": {
+          "course_code": "XYZ999",
+          "info_type": "prerequisites"
+        }
+      },
+      "observation": {
+        "iteration": 1,
+        "tool_call_count": 1,
+        "rag_call_count": 0,
+        "has_new_info": true,
+        "last_action_success": false
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "get_course_info",
+      "arguments": {
+        "course_code": "XYZ999",
+        "info_type": "prerequisites"
+      },
+      "result": {
+        "success": false,
+        "error": "Course XYZ999 not found"
+      },
+      "timestamp": "2026-10-01T12:01:03.157583"
+    }
+  ],
+  "rag_calls": [],
+  "human_approvals": [],
+  "final_response": "I wasn't able to fully resolve your issue. Would you like me to create a support ticket?",
+  "stop_reason": "Planner could not parse decision",
+  "completed_at": "2026-10-01T12:01:26.815458"
+}
