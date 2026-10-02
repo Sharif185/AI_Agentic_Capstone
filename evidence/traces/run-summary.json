@@ -1,0 +1,35 @@
+{
+  "scenarios": [
+    {
+      "id": "TRACE-001",
+      "goal": "I want to register for BSE4104. What do I need?",
+      "iterations": 2,
+      "stop_reason": "stop_requested",
+      "limits_ok": true,
+      "auto_trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-20261002065103-fc5d13.json",
+      "fixed_trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-001.json",
+      "response_preview": "I'm not able to make progress on this request safely. Let me connect you with a human who can help."
+    },
+    {
+      "id": "TRACE-002",
+      "goal": "What are the prerequisites for XYZ999?",
+      "iterations": 2,
+      "stop_reason": "stop_requested",
+      "limits_ok": true,
+      "auto_trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-20261002065113-1b858e.json",
+      "fixed_trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-002.json",
+      "response_preview": "I'm not able to make progress on this request safely. Let me connect you with a human who can help."
+    },
+    {
+      "id": "TRACE-003",
+      "goal": "I have a problem.",
+      "iterations": 1,
+      "stop_reason": "stop_requested",
+      "limits_ok": true,
+      "auto_trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-20261002065120-a7c82a.json",
+      "fixed_trace_file": "D:\\SOFTWARE ENGINEERING\\YR4 SEM1\\EMERGING TRENDS\\AI_Agentic Capstone\\AI_Agentic_Capstone-main\\evidence\\traces\\TRACE-003.json",
+      "response_preview": "I'm sorry to hear that. Could you please provide more details about the problem you are experiencing so I can help you resolve it?"
+    }
+  ],
+  "all_limits_respected": true
+}
