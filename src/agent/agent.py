@@ -1,240 +1,164 @@
-import json
-import os
-from .state import AgentState
-from .planner import Planner
-from .stop_conditions import StopConditions
-from .tracer import Tracer
+from agent.state import AgentState
+from agent.stop_conditions import StopConditions
+from agent.tracer import Tracer
+
+# Week 5's approved tool list (Section 8 of the brief). The agent refuses
+# to call anything outside this set, even if the planner asks for it.
+APPROVED_TOOLS = {"get_course_info", "create_support_ticket"}
+AVAILABLE_ACTIONS = {"rag_retrieve", "call_tool", "answer", "stop"}
+
+_GENERIC_STOP_MESSAGES = {
+    "max_iterations_reached": "I've looked into this as far as I safely can right now. Let me connect you with a human who can help further.",
+    "max_tool_calls_reached": "I've tried the available actions for this request. Let me connect you with a human who can help further.",
+    "max_rag_calls_reached": "I wasn't able to find a clear answer in the documents I have access to. Let me connect you with a human who can help further.",
+    "no_progress_detected": "I'm not finding new information to help with this. Could you give me a bit more detail, or I can connect you with a human?",
+    "human_handoff": "This needs a human to review — I've noted the details for follow-up.",
+}
+_DEFAULT_STOP_MESSAGE = "I'm not able to resolve this safely right now. Let me connect you with a human who can help."
+
 
 class StudentSupportAgent:
-    """Bounded, goal-directed agent for student support."""
-    
-    def __init__(self, model_client, rag_pipeline, tool_executor,
+    """
+    Bounded, goal-directed orchestrator implementing
+    Sense -> Plan -> Act -> Observe -> Evaluate.
+
+    Integrates ModelClient, RAGPipeline, ToolExecutor (which itself owns
+    ApprovalController), Planner, StopConditions, Tracer, and AgentState.
+    This class never bypasses ToolExecutor/ApprovalController, never calls
+    a tool outside APPROVED_TOOLS, and never continues past the configured
+    limits — those guarantees hold regardless of what the planner returns.
+    """
+
+    def __init__(self, model_client, rag_pipeline, tool_executor, planner,
                  max_iterations=5, max_tool_calls=3, max_rag_calls=2,
-                 trace_output_dir=None):
+                 trace_dir="evidence/traces"):
         self.model = model_client
         self.rag = rag_pipeline
-        self.executor = tool_executor
-        self.planner = Planner(model_client, tool_executor.get_tool_schemas())
-        self.stop_conditions = StopConditions(max_iterations, max_tool_calls, max_rag_calls)
-        
-        # Allow caller to override trace output dir (useful for tests)
-        if trace_output_dir is None:
-            # Default: evidence/traces relative to project root
-            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            trace_output_dir = os.path.join(project_root, "evidence", "traces")
-        self.tracer = Tracer(output_dir=trace_output_dir)
-    
-    def run(self, goal, student_name="Student", trace_id=None):
+        self.tool_executor = tool_executor
+        self.planner = planner
+        self.max_iterations = max_iterations
+        self.trace_dir = trace_dir
+        self.stop_conditions = StopConditions(
+            max_iterations=max_iterations,
+            max_tool_calls=max_tool_calls,
+            max_rag_calls=max_rag_calls,
+        )
+
+    def run(self, goal, student_name="Student"):
         """
-        Run the bounded agent loop.
-        
-        Returns:
-            dict with 'response', 'state', 'trace_file', 'iterations', 'stop_reason'
+        Run the bounded agent loop for one student goal.
+
+        Returns {"response", "state", "trace_file", "iterations", "stop_reason"}.
         """
-        state = AgentState(goal)
-        assigned_trace_id = self.tracer.start_trace(goal, trace_id=trace_id)
-        
-        print(f"\n[Agent] Starting trace {assigned_trace_id}")
-        print(f"[Agent] Goal: {goal}\n")
-        
+        state = AgentState(goal, max_iterations=self.max_iterations, student_name=student_name)
+        tracer = Tracer(goal, trace_dir=self.trace_dir)
+
         while True:
-            # EVALUATE — check stop conditions before each iteration
-            should_stop, reason = self.stop_conditions.should_stop(state)
+            # 1. Check stop conditions — authoritative, overrides the planner
+            should_stop, reason = self.stop_conditions.check(state)
             if should_stop:
-                state.stop_reason = reason
-                print(f"[Agent] STOP — {reason}")
+                if not state.completed:
+                    state.mark_complete(_GENERIC_STOP_MESSAGES.get(reason, _DEFAULT_STOP_MESSAGE), reason)
                 break
-            
+
+            # 2. Increment iteration
             state.next_iteration()
-            print(f"\n[Agent] ── Iteration {state.iteration} ──")
-            
-            # 1. SENSE
-            sense_data = self._sense(state)
-            state.add_step("sense", sense_data)
-            print(f"[Agent] SENSE: iter={state.iteration}, rag_results={sense_data['has_rag_results']}, tool_results={sense_data['has_tool_results']}")
-            
-            # 2. PLAN
-            plan = self.planner.plan_next_action(state)
+
+            # 3. SENSE — the accumulated state itself is the sensed context;
+            #    the planner is given the goal + history on every call.
+
+            # 4. PLAN
+            try:
+                plan = self.planner.plan(state, AVAILABLE_ACTIONS)
+            except Exception as e:
+                plan = {"action": "stop", "action_input": {"response": _DEFAULT_STOP_MESSAGE}, "reasoning": f"planner_exception: {e}"}
             state.current_plan = plan
             state.add_step("plan", plan)
-            print(f"[Agent] PLAN: {plan}")
-            
-            # 3. ACT
+
+            # 5. ACT (+ 6. OBSERVE is recorded inside each _act_* helper)
             action = plan.get("action")
-            
+            action_input = plan.get("action_input", {}) or {}
+            observation = self._act(action, action_input, state, tracer)
+
+            # 7. EVALUATE
             if action == "answer":
-                final_text = plan.get("text", "")
-                state.mark_complete(final_text, "goal_achieved")
-                state.add_step("act", {"action": "answer", "text": final_text})
-                print(f"[Agent] ACT: answer → {final_text[:100]}...")
-                break
-            
+                state.mark_complete(action_input.get("response", ""), "goal_achieved")
             elif action == "stop":
-                stop_reason = plan.get("reason", "agent_stopped")
-                final_text = self._generate_stop_response(state, stop_reason)
-                state.mark_complete(final_text, stop_reason)
-                state.add_step("act", {"action": "stop", "reason": stop_reason})
-                print(f"[Agent] ACT: stop → {stop_reason}")
-                break
-            
-            elif action == "rag_retrieve":
-                query = plan.get("query", goal)
-                result = self._execute_rag(state, query)
-                state.add_step("act", {"action": "rag_retrieve", "query": query, "result": result})
-                print(f"[Agent] ACT: rag_retrieve({query!r}) → success={result.get('success')}")
-            
-            elif action == "call_tool":
-                result = self._execute_tool(state, plan, student_name)
-                state.add_step("act", {"action": "call_tool", "tool": plan.get("tool"), "result": result})
-                print(f"[Agent] ACT: call_tool({plan.get('tool')}) → success={result.get('success')}")
-            
-            else:
-                state.mark_complete(
-                    "I'm not sure how to help with that. Would you like me to create a support ticket?",
-                    "unknown_action"
-                )
-                break
-            
-            # 4. OBSERVE
-            observation = self._observe(state)
-            state.add_step("observe", observation)
-            print(f"[Agent] OBSERVE: tool_calls={observation['tool_call_count']}, rag_calls={observation['rag_call_count']}")
-            
-            # Record this iteration in tracer
-            self.tracer.record_iteration({
-                "iteration": state.iteration,
-                "action": action,
-                "plan": plan,
-                "observation": observation
-            })
-        
-        # Generate final response if not set by loop
-        if not state.final_response:
-            state.final_response = self._generate_final_response(state)
-        
-        self.tracer.end_trace(state.final_response, state.stop_reason)
-        trace_file = self.tracer.save()
-        
-        print(f"\n[Agent] Final response: {state.final_response}")
-        print(f"[Agent] Trace saved: {trace_file}")
-        
+                reason = "human_handoff" if state.human_needed else "stop_requested"
+                state.mark_complete(action_input.get("response", _DEFAULT_STOP_MESSAGE), reason)
+
+            tracer.record_iteration(state.iteration, plan, {"action": action, "observation": observation})
+
+            # 8. loop repeats; the top-of-loop check handles exit next pass
+
+        tracer.finalize(state.final_response, state.stop_reason)
+        trace_file = tracer.save()
+
         return {
             "response": state.final_response,
             "state": state.to_dict(),
             "trace_file": trace_file,
             "iterations": state.iteration,
-            "stop_reason": state.stop_reason
+            "stop_reason": state.stop_reason,
         }
-    
-    def _sense(self, state):
-        return {
-            "goal": state.goal,
-            "iteration": state.iteration,
-            "has_rag_results": len(state.retrieved_documents) > 0,
-            "has_tool_results": len(state.tool_results) > 0,
-            "history_length": len(state.history)
-        }
-    
-    def _execute_rag(self, state, query):
+
+    # ------------------------------------------------------------------
+    # ACT helpers
+    # ------------------------------------------------------------------
+
+    def _act(self, action, action_input, state, tracer):
+        if action == "rag_retrieve":
+            return self._act_rag_retrieve(action_input, state, tracer)
+        if action == "call_tool":
+            return self._act_call_tool(action_input, state, tracer)
+        if action in ("answer", "stop"):
+            state.add_step(action, action_input)
+            return action_input
+
+        # Unknown/invalid action from the planner -> safe stop, never a crash
+        state.add_step("stop", {"response": "unknown_action", "unknown_action": action})
+        state.human_needed = True
+        return {"error": f"Unknown action '{action}'"}
+
+    def _act_rag_retrieve(self, action_input, state, tracer):
+        query = action_input.get("query") or state.goal
         try:
             result = self.rag.query(query)
-            state.retrieved_documents.append(result)
-            state.rag_call_count += 1
-            self.tracer.record_rag_call(
-                query=query,
-                num_results=len(result.get("retrieved_chunks", [])),
-                sources=result.get("sources", [])
-            )
-            return {
-                "success": True,
+            state.record_rag_call(result)
+            step_data = {
+                "query": query,
                 "num_results": len(result.get("retrieved_chunks", [])),
                 "sources": result.get("sources", []),
-                "context_preview": result.get("context", "")[:200]
+                "context": result.get("context", ""),
+                "success": True,
             }
         except Exception as e:
-            return {"success": False, "error": str(e)}
-    
-    def _execute_tool(self, state, plan, student_name="Student"):
-        tool_name = plan.get("tool")
-        arguments = plan.get("arguments", {})
-        
-        # For ticket creation, inject student_name if not provided
-        if tool_name == "create_support_ticket" and "student_name" not in arguments:
-            arguments["student_name"] = student_name
-        
-        try:
-            result = self.executor.execute(tool_name, arguments)
-            state.tool_results.append({
-                "tool": tool_name,
-                "arguments": arguments,
-                "result": result
-            })
-            state.tool_call_count += 1
-            
-            self.tracer.record_tool_call(tool_name, arguments, result.get("result"))
-            
-            # Check approval outcome for ticket creation
-            if tool_name == "create_support_ticket":
-                approval_log = self.executor.approval.get_log()
-                if approval_log:
-                    last = approval_log[-1]
-                    self.tracer.record_approval(tool_name, arguments, last.get("approved", False))
-                    if not last.get("approved", False):
-                        state.human_needed = True
-            
-            return result
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-    
-    def _observe(self, state):
-        return {
-            "iteration": state.iteration,
-            "tool_call_count": state.tool_call_count,
-            "rag_call_count": state.rag_call_count,
-            "has_new_info": len(state.history) > 0,
-            "last_action_success": self._last_action_succeeded(state)
-        }
-    
-    def _last_action_succeeded(self, state):
-        act_steps = [h for h in state.history if h["action"] == "act"]
-        if not act_steps:
-            return True
-        last = act_steps[-1]["data"]
-        result = last.get("result", {})
-        if isinstance(result, dict):
-            return result.get("success", True)
-        return True
-    
-    def _generate_stop_response(self, state, reason):
-        if reason == "max_iterations_reached":
-            return (
-                "I've been working on your issue but need more information to help fully. "
-                "Would you like me to create a support ticket for direct assistance?"
-            )
-        elif reason == "no_progress_detected":
-            return (
-                "I need more details to help you. Could you tell me:\n"
-                "- What course or service is this about?\n"
-                "- What specifically is the issue?\n\n"
-                "Or I can create a support ticket for direct assistance."
-            )
+            step_data = {"query": query, "success": False, "error": str(e)}
+            state.record_rag_call({"question": query, "error": str(e)})
+
+        state.add_step("rag_retrieve", step_data)
+        tracer.record_rag_call(query, step_data.get("num_results", 0), step_data.get("sources", []))
+        return step_data
+
+    def _act_call_tool(self, action_input, state, tracer):
+        tool_name = action_input.get("tool_name")
+        arguments = action_input.get("arguments", {}) or {}
+
+        if tool_name not in APPROVED_TOOLS:
+            result = {"success": False, "error": f"Tool '{tool_name}' is not in the approved tool list."}
         else:
-            return (
-                "I wasn't able to fully resolve your issue. "
-                "Would you like me to create a support ticket?"
-            )
-    
-    def _generate_final_response(self, state):
-        if state.tool_results:
-            last_result = state.tool_results[-1]
-            if last_result["tool"] == "create_support_ticket":
-                result_data = last_result["result"].get("result", {})
-                if result_data.get("success"):
-                    ticket_id = result_data.get("ticket_id", "unknown")
-                    return (
-                        f"I've created ticket {ticket_id} for your issue. "
-                        "Support staff will follow up within 24 hours."
-                    )
-        if state.retrieved_documents:
-            return "Based on the information I found, please see the details above."
-        return "I need more information to help you. Could you clarify your issue?"
+            try:
+                # ToolExecutor is the sole authority for execution + approval;
+                # never bypassed or duplicated here.
+                result = self.tool_executor.execute(tool_name, arguments)
+            except Exception as e:
+                result = {"success": False, "error": f"Tool execution failed unexpectedly: {e}"}
+
+        state.record_tool_call(tool_name, arguments, result)
+        state.add_step("call_tool", {"tool_name": tool_name, "arguments": arguments, "result": result})
+        tracer.record_tool_call(tool_name, arguments, result)
+
+        if "approved" in result:
+            tracer.record_approval(tool_name, arguments, result["approved"])
+
+        return result

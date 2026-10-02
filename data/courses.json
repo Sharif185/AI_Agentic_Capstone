@@ -1,47 +1,45 @@
 {
-  "BSE4104": {
-    "code": "BSE4104",
-    "name": "Emerging Trends in Software Engineering",
-    "credits": 4,
-    "description": "Covers AI-native and agentic engineering, foundation models, RAG, tools, and bounded autonomy.",
-    "prerequisites": ["BSE3101", "BSE3102", "CS103"],
-    "schedule": {
-      "lectures": "Monday 10:00-12:00, Wednesday 14:00-16:00",
-      "venue": "Block B, Room 204"
+  "_note": "Sample/demo course data for the Week 4 tool-calling demo, consistent with the project's synthetic-data strategy (docs/project-charter.md, Section 6). BSE4104 is the capstone course itself. BSE3101, BSE3102, and CS103 are illustrative prerequisite entries built for this demo since no public per-course syllabus was available (see knowledge/corpus/README.md, 'Known gaps') — replace with verified course records if/when a real syllabus source is added.",
+  "courses": [
+    {
+      "course_code": "BSE4104",
+      "course_name": "Emerging Trends in Software Engineering",
+      "credits": 4,
+      "description": "Capstone course covering AI-native and agentic software engineering: foundation models, prompt engineering, retrieval-augmented generation, tool/function calling, and human-in-the-loop safety design, applied through an 8-week team project.",
+      "prerequisites": ["BSE3101", "BSE3102", "CS103"],
+      "schedule": "Semester One, Year 4 — Tuesdays and Thursdays, 2:00 PM - 4:00 PM",
+      "venue": "CoCIS Block B, Room 3.2",
+      "instructor": "TBD (Department of Networks / Software Engineering)"
     },
-    "instructor": "Dr Kamulegeya Grace B"
-  },
-  "BSE3101": {
-    "code": "BSE3101",
-    "name": "Software Architecture",
-    "credits": 3,
-    "description": "Principles of software architecture and design patterns.",
-    "prerequisites": ["BSE2101", "BSE2102"],
-    "schedule": {
-      "lectures": "Tuesday 08:00-10:00",
-      "venue": "Block A, Room 101"
+    {
+      "course_code": "BSE3101",
+      "course_name": "Software Requirements Engineering",
+      "credits": 3,
+      "description": "Principles and techniques for eliciting, analyzing, specifying, and validating software requirements, including stakeholder analysis and requirements documentation.",
+      "prerequisites": [],
+      "schedule": "Semester One, Year 3 — Mondays and Wednesdays, 10:00 AM - 12:00 PM",
+      "venue": "CoCIS Block A, Room 2.1",
+      "instructor": "TBD (Department of Networks / Software Engineering)"
+    },
+    {
+      "course_code": "BSE3102",
+      "course_name": "Software Architecture and Design",
+      "credits": 3,
+      "description": "Architectural styles and design patterns for software systems, covering design trade-offs, modularity, and documentation of architectural decisions.",
+      "prerequisites": ["BSE3101"],
+      "schedule": "Semester Two, Year 3 — Tuesdays and Thursdays, 8:00 AM - 10:00 AM",
+      "venue": "CoCIS Block A, Room 2.3",
+      "instructor": "TBD (Department of Networks / Software Engineering)"
+    },
+    {
+      "course_code": "CS103",
+      "course_name": "Data Structures and Algorithms",
+      "credits": 3,
+      "description": "Core data structures (lists, trees, graphs, hash tables) and algorithm design/analysis techniques, including complexity analysis.",
+      "prerequisites": [],
+      "schedule": "Semester Two, Year 1 — Mondays, Wednesdays, Fridays, 9:00 AM - 10:00 AM",
+      "venue": "CoCIS Block C, Room 1.4",
+      "instructor": "TBD (Department of Computer Science)"
     }
-  },
-  "BSE3102": {
-    "code": "BSE3102",
-    "name": "Database Systems",
-    "credits": 3,
-    "description": "Relational and NoSQL database design and implementation.",
-    "prerequisites": ["BSE2103"],
-    "schedule": {
-      "lectures": "Thursday 10:00-12:00",
-      "venue": "Block C, Room 305"
-    }
-  },
-  "CS103": {
-    "code": "CS103",
-    "name": "Discrete Mathematics",
-    "credits": 3,
-    "description": "Foundations of discrete mathematics for computer science.",
-    "prerequisites": [],
-    "schedule": {
-      "lectures": "Friday 08:00-10:00",
-      "venue": "Block A, Room 105"
-    }
-  }
+  ]
 }

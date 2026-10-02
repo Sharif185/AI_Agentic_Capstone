@@ -1,48 +1,72 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from dotenv import load_dotenv
 
 from models.model_client import ModelClient
 from rag.pipeline import RAGPipeline
 from tools.course_tool import CourseTool
 from tools.ticket_tool import TicketTool
-from tools.ticket_storage import TicketStorage
-from orchestration.tool_executor import ToolExecutor
-from orchestration.approval_controller import ApprovalController
+from tools.approval_controller import ApprovalController
+from tools.tool_executor import ToolExecutor
+from agent.planner import Planner
 from agent.agent import StudentSupportAgent
 
+load_dotenv()
+
+
 def main():
-    print("=" * 70)
-    print("Student Support Agent - Bounded Autonomy (Week 5)")
-    print("=" * 70)
-    print("\nLimits: 5 iterations, 3 tool calls, 2 RAG calls")
-    print("Type 'exit' to quit.\n")
-    
+    print("=" * 60)
+    print("Student Support Agent - Bounded Multi-Step Agent (Week 5)")
+    print("=" * 60)
+
+    # 1. Model client
     model = ModelClient()
-    rag = RAGPipeline()
-    
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    courses_path = os.path.join(project_root, "..", "data", "courses.json")
-    db_path = os.path.join(project_root, "..", "data", "tickets.db")
-    
-    tools = [CourseTool(data_path=courses_path), TicketTool(storage=TicketStorage(db_path=db_path))]
-    approval = ApprovalController(auto_approve=False, interactive=True)
-    executor = ToolExecutor(tools, approval)
-    agent = StudentSupportAgent(model, rag, executor)
-    
+
+    # 2. RAG pipeline
+    rag_pipeline = RAGPipeline()
+
+    # 3. Approved tools
+    course_tool = CourseTool()
+    ticket_tool = TicketTool()
+
+    # 4. Approval controller
+    approval_controller = ApprovalController()
+
+    # 5. Tool executor (existing Week 4 component — not bypassed or duplicated)
+    tool_executor = ToolExecutor(approval_controller)
+    tool_executor.register(course_tool)
+    tool_executor.register(ticket_tool)
+
+    # 6. Agent, with its own Planner
+    planner = Planner(model)
+    agent = StudentSupportAgent(
+        model_client=model,
+        rag_pipeline=rag_pipeline,
+        tool_executor=tool_executor,
+        planner=planner,
+        max_iterations=5,
+        max_tool_calls=3,
+        max_rag_calls=2,
+    )
+
+    print("\nDescribe what you need help with. Type 'exit' to quit.\n")
+
     while True:
         goal = input("Student: ").strip()
+
         if goal.lower() == "exit":
+            print("Goodbye!")
             break
+
         if not goal:
+            print("Assistant: Please tell me what you need help with.")
             continue
-        
-        print("\n" + "─" * 70)
+
         result = agent.run(goal)
-        print(f"\n{'─'*70}")
-        print(f"Iterations: {result['iterations']} | Stop: {result['stop_reason']}")
+
         print(f"\nAssistant: {result['response']}")
-        print(f"Trace: {result['trace_file']}\n")
+        print(f"\n[Iterations: {result['iterations']}]")
+        print(f"[Stop reason: {result['stop_reason']}]")
+        print(f"[Trace saved to: {result['trace_file']}]\n")
+
 
 if __name__ == "__main__":
     main()
