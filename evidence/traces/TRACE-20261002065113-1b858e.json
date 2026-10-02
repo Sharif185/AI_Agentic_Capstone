@@ -1,0 +1,63 @@
+{
+  "trace_id": "TRACE-20261002065113-1b858e",
+  "goal": "What are the prerequisites for XYZ999?",
+  "started_at": "2026-10-02T06:51:13.071434+00:00",
+  "iterations": [
+    {
+      "iteration": 1,
+      "plan": {
+        "action": "call_tool",
+        "action_input": {
+          "tool_name": "get_course_info",
+          "arguments": {
+            "course_code": "XYZ999"
+          }
+        },
+        "reasoning": "I need to check the course information for XYZ999 to find its prerequisites."
+      },
+      "action_taken": {
+        "action": "call_tool",
+        "observation": {
+          "success": false,
+          "error": "No course found with code 'XYZ999'."
+        }
+      },
+      "timestamp": "2026-10-02T06:51:20.236510+00:00"
+    },
+    {
+      "iteration": 2,
+      "plan": {
+        "action": "stop",
+        "action_input": {
+          "response": "I'm not able to make progress on this request safely. Let me connect you with a human who can help."
+        },
+        "reasoning": "planner_error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+      },
+      "action_taken": {
+        "action": "stop",
+        "observation": {
+          "response": "I'm not able to make progress on this request safely. Let me connect you with a human who can help."
+        }
+      },
+      "timestamp": "2026-10-02T06:51:20.685791+00:00"
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "get_course_info",
+      "arguments": {
+        "course_code": "XYZ999"
+      },
+      "result": {
+        "success": false,
+        "error": "No course found with code 'XYZ999'."
+      },
+      "timestamp": "2026-10-02T06:51:20.236487+00:00"
+    }
+  ],
+  "rag_calls": [],
+  "human_approvals": [],
+  "final_response": "I'm not able to make progress on this request safely. Let me connect you with a human who can help.",
+  "stop_reason": "stop_requested",
+  "completed_at": "2026-10-02T06:51:20.685816+00:00"
+}

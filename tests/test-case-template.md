@@ -270,4 +270,3 @@ The ≥ 30 evaluation scenarios must include at least the following distribution
 
 ---
 
-*This template is owned by Imaan (Quality/Security Lead). New test cases added by any team member must follow this format.*
