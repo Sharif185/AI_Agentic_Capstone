@@ -1,5 +1,4 @@
 import json
-import re
 
 PLANNING_PROMPT_TEMPLATE = """You are the planning module of a bounded university student-support agent.
 Given the student's goal and everything done so far, decide the SINGLE next action.
@@ -66,13 +65,23 @@ class Planner:
                 system_prompt="You respond with valid JSON only, nothing else — no markdown, no commentary.",
                 user_message=prompt,
                 temperature=0.0,
+                disable_thinking=True,
             )
-            decision = self._parse_json((result.get("response") or "").strip())
+            raw = (result.get("response") or "").strip()
+            decision = self._parse_json(raw)
         except Exception as e:
             return {"action": "stop", "action_input": {"response": _FALLBACK_MESSAGE}, "reasoning": f"planner_error: {e}"}
 
         if not decision or decision.get("action") not in available_actions:
-            return {"action": "stop", "action_input": {"response": _FALLBACK_MESSAGE}, "reasoning": "invalid_or_unparseable_planner_output"}
+            # Keep a truncated snippet of what the model actually returned,
+            # so a parse failure is diagnosable from the trace alone instead
+            # of needing to reproduce it live.
+            snippet = raw[:300].replace("\n", " ") if raw else "(empty response)"
+            return {
+                "action": "stop",
+                "action_input": {"response": _FALLBACK_MESSAGE},
+                "reasoning": f"invalid_or_unparseable_planner_output: {snippet!r}",
+            }
 
         decision.setdefault("action_input", {})
         decision.setdefault("reasoning", "")
@@ -90,12 +99,45 @@ class Planner:
 
     @staticmethod
     def _parse_json(raw):
+        """
+        Extract and parse the first balanced top-level {...} object in raw.
+        Used instead of a greedy regex because a greedy '\\{.*\\}' match can
+        span from the FIRST '{' to the LAST '}' in the whole response --
+        if the model adds any trailing commentary or a second brace
+        anywhere, that silently grabs the wrong (unparseable) span. A
+        balanced-brace scan finds the exact matching object regardless of
+        what surrounds it.
+        """
         if not raw:
             return None
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
+
+        start = raw.find("{")
+        if start == -1:
             return None
-        try:
-            return json.loads(match.group(0))
-        except json.JSONDecodeError:
-            return None
+
+        depth = 0
+        in_string = False
+        escape = False
+        for i in range(start, len(raw)):
+            ch = raw[i]
+            if in_string:
+                if escape:
+                    escape = False
+                elif ch == "\\":
+                    escape = True
+                elif ch == '"':
+                    in_string = False
+                continue
+            if ch == '"':
+                in_string = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    candidate = raw[start:i + 1]
+                    try:
+                        return json.loads(candidate)
+                    except json.JSONDecodeError:
+                        return None
+        return None
