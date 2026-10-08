@@ -2,9 +2,8 @@ from agent.state import AgentState
 from agent.stop_conditions import StopConditions
 from agent.tracer import Tracer
 
-# Week 5's approved tool list (Section 8 of the brief). The agent refuses
-# to call anything outside this set, even if the planner asks for it.
-APPROVED_TOOLS = {"get_course_info", "create_support_ticket"}
+# Week 6: added check_ticket_status to approved tools
+APPROVED_TOOLS = {"get_course_info", "create_support_ticket", "check_ticket_status"}
 AVAILABLE_ACTIONS = {"rag_retrieve", "call_tool", "answer", "stop"}
 
 _GENERIC_STOP_MESSAGES = {
@@ -22,20 +21,19 @@ class StudentSupportAgent:
     Bounded, goal-directed orchestrator implementing
     Sense -> Plan -> Act -> Observe -> Evaluate.
 
-    Integrates ModelClient, RAGPipeline, ToolExecutor (which itself owns
-    ApprovalController), Planner, StopConditions, Tracer, and AgentState.
-    This class never bypasses ToolExecutor/ApprovalController, never calls
-    a tool outside APPROVED_TOOLS, and never continues past the configured
-    limits — those guarantees hold regardless of what the planner returns.
+    Week 6 addition: accepts an optional memory_manager that loads
+    prior ticket context before each run and saves new tickets
+    automatically via the updated TicketTool.
     """
 
     def __init__(self, model_client, rag_pipeline, tool_executor, planner,
-                 max_iterations=5, max_tool_calls=3, max_rag_calls=2,
-                 trace_dir="evidence/traces"):
+                 memory_manager=None, max_iterations=5, max_tool_calls=3,
+                 max_rag_calls=2, trace_dir="evidence/traces"):
         self.model = model_client
         self.rag = rag_pipeline
         self.tool_executor = tool_executor
         self.planner = planner
+        self.memory = memory_manager      # Week 6: optional MemoryManager
         self.max_iterations = max_iterations
         self.trace_dir = trace_dir
         self.stop_conditions = StopConditions(
@@ -44,13 +42,18 @@ class StudentSupportAgent:
             max_rag_calls=max_rag_calls,
         )
 
-    def run(self, goal, student_name="Student"):
+    def run(self, goal, student_name="Student", user_id=None):
         """
         Run the bounded agent loop for one student goal.
 
         Returns {"response", "state", "trace_file", "iterations", "stop_reason"}.
         """
         state = AgentState(goal, max_iterations=self.max_iterations, student_name=student_name)
+
+        # Week 6: inject memory context into state before planning starts
+        if self.memory and user_id:
+            state.memory_context = self.memory.get_memory_context(user_id)
+
         tracer = Tracer(goal, trace_dir=self.trace_dir)
 
         while True:

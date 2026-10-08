@@ -52,8 +52,12 @@ class TicketTool(BaseTool):
     }
     requires_approval = True
 
-    def __init__(self, storage_path="data/support_tickets.json"):
+    def __init__(self, storage_path="data/support_tickets.json", memory=None):
         self.storage_path = storage_path
+        # Week 6: optional MemoryManager — if provided, tickets are
+        # automatically saved to persistent memory on creation so that
+        # check_ticket_status can retrieve them in a future session.
+        self.memory = memory
 
     def execute(self, **kwargs) -> dict:
         student_name = kwargs.get("student_name")
@@ -116,5 +120,13 @@ class TicketTool(BaseTool):
                 json.dump({"tickets": tickets}, f, indent=2)
         except OSError as e:
             return {"success": False, "error": f"Ticket storage is unavailable (could not write '{self.storage_path}': {e})."}
+
+        # Week 6: save to persistent memory so check_ticket_status can
+        # retrieve this ticket in future sessions.
+        if self.memory is not None:
+            try:
+                self.memory.save_ticket(ticket)
+            except Exception:
+                pass  # Memory save failure is non-fatal — the JSON write succeeded
 
         return {"success": True, "ticket": ticket}
