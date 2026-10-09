@@ -12,7 +12,7 @@ AVAILABLE ACTIONS:
 - answer: give the final answer now, if you have enough information. action_input: {{"response": "<final answer text>"}}
 - stop: stop and hand off to a human, or ask the student to clarify, if the request is too vague or cannot be resolved. action_input: {{"response": "<message to the student>"}}
 
-HISTORY SO FAR (most recent last):
+{memory_section}HISTORY SO FAR (most recent last):
 {history}
 
 RULES:
@@ -58,6 +58,7 @@ class Planner:
         prompt = PLANNING_PROMPT_TEMPLATE.format(
             goal=state.goal,
             history=self._format_history(state),
+            memory_section=self._format_memory(state),
         )
 
         try:
@@ -86,6 +87,19 @@ class Planner:
         decision.setdefault("action_input", {})
         decision.setdefault("reasoning", "")
         return decision
+
+    @staticmethod
+    def _format_memory(state):
+        """MEMORY CONTEXT block, or "" when empty. It is background only: the student's
+        current goal and the rules below always take precedence over it."""
+        memory = getattr(state, "memory_context", "") or ""
+        if not memory.strip():
+            return ""
+        return (
+            "MEMORY CONTEXT (remembered from earlier sessions; background only - the current goal "
+            "above takes precedence, and do not assume the current issue is the same as a prior one "
+            "without confirming with the student):\n" + memory.strip() + "\n\n"
+        )
 
     @staticmethod
     def _format_history(state, max_entries=10):

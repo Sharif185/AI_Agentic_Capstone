@@ -1,0 +1,49 @@
+# Command: python tests/test_week6_memory.py   (run 2026-10-09T05:44Z, Linux sandbox, Python 3.13)
+test_agent_receives_memory (__main__.TestAgentIntegration.test_agent_receives_memory) ... ok
+test_agent_without_user_id_or_empty_memory (__main__.TestAgentIntegration.test_agent_without_user_id_or_empty_memory) ... ok
+test_agent_works_without_memory (__main__.TestAgentIntegration.test_agent_works_without_memory) ... ok
+test_memory_failure_does_not_break_agent (__main__.TestAgentIntegration.test_memory_failure_does_not_break_agent) ... ok
+test_planner_prompt_empty_and_populated (__main__.TestAgentIntegration.test_planner_prompt_empty_and_populated) ... ok
+test_delete_all_data (__main__.TestDeletion.test_delete_all_data) ... ok
+test_delete_all_denied_for_other_user (__main__.TestDeletion.test_delete_all_denied_for_other_user) ... ok
+test_delete_session_only (__main__.TestDeletion.test_delete_session_only) ... ok
+test_delete_ticket_only (__main__.TestDeletion.test_delete_ticket_only) ... ok
+test_demo_passes (__main__.TestDemoScript.test_demo_passes) ... ok
+test_context_requires_matching_active_session (__main__.TestIsolationAndContext.test_context_requires_matching_active_session) ... ok
+test_empty_memory_context (__main__.TestIsolationAndContext.test_empty_memory_context) ... ok
+test_isolation (__main__.TestIsolationAndContext.test_isolation) ... ok
+test_mismatched_student_id_rejected (__main__.TestIsolationAndContext.test_mismatched_student_id_rejected) ... ok
+test_unowned_ticket_same_session_only (__main__.TestIsolationAndContext.test_unowned_ticket_same_session_only) ... ok
+test_db_path_without_directory (__main__.TestPersistence.test_db_path_without_directory) ... ok
+test_missing_records_safe (__main__.TestPersistence.test_missing_records_safe) ... ok
+test_multiple_tickets_per_student (__main__.TestPersistence.test_multiple_tickets_per_student) ... ok
+test_repeat_save_no_duplicate (__main__.TestPersistence.test_repeat_save_no_duplicate) ... ok
+test_save_get_and_restart (__main__.TestPersistence.test_save_get_and_restart) ... ok
+test_sql_injection_is_inert (__main__.TestPersistence.test_sql_injection_is_inert) ... ok
+test_ticket_id_cannot_overwrite_other_student (__main__.TestPersistence.test_ticket_id_cannot_overwrite_other_student) ... ok
+test_approved_preference_persists (__main__.TestPreferencesAndPrivacy.test_approved_preference_persists) ... ok
+test_no_transcript_columns (__main__.TestPreferencesAndPrivacy.test_no_transcript_columns) ... ok
+test_prohibited_preferences_rejected (__main__.TestPreferencesAndPrivacy.test_prohibited_preferences_rejected) ... ok
+test_store_level_rejects_unapproved (__main__.TestPreferencesAndPrivacy.test_store_level_rejects_unapproved) ... ok
+test_ticket_text_redacted_and_extras_dropped (__main__.TestPreferencesAndPrivacy.test_ticket_text_redacted_and_extras_dropped) ... ok
+test_unapproved_preference_not_persisted (__main__.TestPreferencesAndPrivacy.test_unapproved_preference_not_persisted) ... ok
+test_resume_session (__main__.TestRetention.test_resume_session) ... ok
+test_sessions_purged_after_30_days (__main__.TestRetention.test_sessions_purged_after_30_days) ... ok
+test_start_session_enforces_retention (__main__.TestRetention.test_start_session_enforces_retention) ... ok
+test_ticket_retention_active_90_closed_365 (__main__.TestRetention.test_ticket_retention_active_90_closed_365) ... ok
+test_expiry (__main__.TestSessionState.test_expiry) ... ok
+test_from_dict_invalid_fields (__main__.TestSessionState.test_from_dict_invalid_fields) ... ok
+test_id_prefix_and_uniqueness (__main__.TestSessionState.test_id_prefix_and_uniqueness) ... ok
+test_roundtrip (__main__.TestSessionState.test_roundtrip) ... ok
+test_touch_and_case (__main__.TestSessionState.test_touch_and_case) ... ok
+test_denied_approval_saves_nothing (__main__.TestTicketToolMemory.test_denied_approval_saves_nothing) ... ok
+test_memory_failure_keeps_ticket (__main__.TestTicketToolMemory.test_memory_failure_keeps_ticket) ... ok
+test_status_lookup_contract (__main__.TestTicketToolMemory.test_status_lookup_contract)
+Interface Louis's TicketStatusTool expects: memory.get_ticket(id) -> dict with these keys. ... ok
+test_ticket_saved_to_memory_once (__main__.TestTicketToolMemory.test_ticket_saved_to_memory_once) ... ok
+test_without_memory_unchanged (__main__.TestTicketToolMemory.test_without_memory_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 42 tests in 0.483s
+
+OK
