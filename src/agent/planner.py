@@ -1,34 +1,82 @@
 import json
-from ..models.model_client import ModelClient
- 
+
+PLANNING_PROMPT_TEMPLATE = """You are the planning module of a bounded university student-support agent.
+Given the student's goal and everything done so far, decide the SINGLE next action.
+
+STUDENT GOAL:
+{goal}
+
+AVAILABLE ACTIONS:
+- rag_retrieve: search university documents. action_input: {{"query": "<search query>"}}
+- call_tool: call one approved tool. action_input: {{"tool_name": "get_course_info"|"create_support_ticket", "arguments": {{...}}}}
+- answer: give the final answer now, if you have enough information. action_input: {{"response": "<final answer text>"}}
+- stop: stop and hand off to a human, or ask the student to clarify, if the request is too vague or cannot be resolved. action_input: {{"response": "<message to the student>"}}
+
+HISTORY SO FAR (most recent last):
+{history}
+
+RULES:
+- Only call_tool with: get_course_info, create_support_ticket.
+- Do NOT repeat a rag_retrieve query or a call_tool (tool_name + arguments) that already appears in the history above.
+- If a tool lookup failed (course not found) and a RAG retrieval also found nothing relevant, the next step is usually call_tool with create_support_ticket, summarizing the issue.
+- If the goal is vague (e.g. "I have a problem") and the history gives you nothing to act on, choose stop and ask a clarifying question rather than guessing.
+- Respond with ONLY a single JSON object, no other text, no markdown fences, in exactly this shape:
+{{"action": "rag_retrieve|call_tool|answer|stop", "action_input": {{...}}, "reasoning": "<one short sentence>"}}
+"""
+
+_FALLBACK_MESSAGE = "I'm not able to make progress on this request safely. Let me connect you with a human who can help."
+
+
 class Planner:
-    """Decides the agent's next action using the model."""
-    
-    def __init__(self, model_client, tool_schemas, rag_available=True):
+    """
+    MINIMAL STAND-IN PLANNER.
+
+    No src/agent/planner.py existed anywhere in the repository before this
+    Week 5 integration, even though the brief assumes the AI Engineering
+    Lead already owns one. This implementation exists purely so the
+    Sense -> Plan -> Act -> Observe -> Evaluate loop is testable end-to-end;
+    it is intentionally simple (one LLM call per planning step, strict JSON
+    output, safe fallback on any parse/model failure).
+
+    agent.py only depends on the plan(state, available_actions) interface
+    below -- whoever owns prompt/planning design can replace this file's
+    internals (a smarter prompt, few-shot examples, a different model call
+    shape, etc.) without touching agent.py, as long as plan() keeps
+    returning {"action", "action_input", "reasoning"}.
+    """
+
+    def __init__(self, model_client):
         self.model = model_client
-        self.tool_schemas = tool_schemas
-        self.rag_available = rag_available
-    
-    def plan_next_action(self, state):
+
+    def plan(self, state, available_actions):
         """
-        Decide the next action based on current state.
-        
-        Returns:
-            dict with 'action' and 'parameters'
+        Returns {"action": str, "action_input": dict, "reasoning": str}.
+        Never raises — on any failure (model error, bad/unparseable JSON,
+        invalid action name), falls back to a safe "stop" decision rather
+        than crashing the agent loop.
         """
-        plan_prompt = self._build_plan_prompt(state)
-        
-        response = self.model.generate(
-            system_prompt=plan_prompt,
-            user_message="What is the next action?",
-            temperature=0.1
+        prompt = PLANNING_PROMPT_TEMPLATE.format(
+            goal=state.goal,
+            history=self._format_history(state),
         )
-        
+
         try:
-            decision = json.loads(response["response"])
-            return decision
-        except json.JSONDecodeError:
-            # Fallback: return a stop action
+            result = self.model.generate(
+                system_prompt="You respond with valid JSON only, nothing else — no markdown, no commentary.",
+                user_message=prompt,
+                temperature=0.0,
+                disable_thinking=True,
+            )
+            raw = (result.get("response") or "").strip()
+            decision = self._parse_json(raw)
+        except Exception as e:
+            return {"action": "stop", "action_input": {"response": _FALLBACK_MESSAGE}, "reasoning": f"planner_error: {e}"}
+
+        if not decision or decision.get("action") not in available_actions:
+            # Keep a truncated snippet of what the model actually returned,
+            # so a parse failure is diagnosable from the trace alone instead
+            # of needing to reproduce it live.
+            snippet = raw[:300].replace("\n", " ") if raw else "(empty response)"
             return {
                 "action": "stop",
                 "reason": "Planner could not parse decision",
@@ -65,15 +113,11 @@ AVAILABLE ACTIONS:
    - Create a support ticket (requires human approval)
    - Use when the issue cannot be resolved with available information
  
-4. {{"action": "call_tool", "tool": "check_ticket_status", "arguments": {{"ticket_id": "..."}}}}
-   - Check the status of a previously created ticket
-   - Use when the student asks about a prior ticket
- 
-5. {{"action": "answer", "text": "..."}}
+4. {{"action": "answer", "text": "..."}}
    - Provide the final answer to the student
    - Use when you have enough information to resolve the issue
  
-6. {{"action": "stop", "reason": "..."}}
+5. {{"action": "stop", "reason": "..."}}
    - Stop the loop without a final answer
    - Use when you cannot make progress
  
@@ -91,16 +135,54 @@ DECISION:"""
     def _summarize_history(self, state):
         """Create a readable summary of the history."""
         if not state.history:
-            return "(no actions taken yet)"
-        
+            return "(nothing yet)"
         lines = []
-        for step in state.history[-6:]:  # Last 6 steps
-            action = step["action"]
-            data = step["data"]
-            if isinstance(data, dict):
-                data_str = json.dumps(data)[:100]
-            else:
-                data_str = str(data)[:100]
-            lines.append(f"  [{action}] {data_str}")
-        
+        for step in state.history[-max_entries:]:
+            summary = json.dumps(step["data"], default=str)[:300]
+            lines.append(f"- iteration {step['iteration']}: {step['action']} -> {summary}")
         return "\n".join(lines)
+
+    @staticmethod
+    def _parse_json(raw):
+        """
+        Extract and parse the first balanced top-level {...} object in raw.
+        Used instead of a greedy regex because a greedy '\\{.*\\}' match can
+        span from the FIRST '{' to the LAST '}' in the whole response --
+        if the model adds any trailing commentary or a second brace
+        anywhere, that silently grabs the wrong (unparseable) span. A
+        balanced-brace scan finds the exact matching object regardless of
+        what surrounds it.
+        """
+        if not raw:
+            return None
+
+        start = raw.find("{")
+        if start == -1:
+            return None
+
+        depth = 0
+        in_string = False
+        escape = False
+        for i in range(start, len(raw)):
+            ch = raw[i]
+            if in_string:
+                if escape:
+                    escape = False
+                elif ch == "\\":
+                    escape = True
+                elif ch == '"':
+                    in_string = False
+                continue
+            if ch == '"':
+                in_string = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    candidate = raw[start:i + 1]
+                    try:
+                        return json.loads(candidate)
+                    except json.JSONDecodeError:
+                        return None
+        return None
