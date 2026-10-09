@@ -30,6 +30,7 @@ class AgentState:
         self.started_at = datetime.now(timezone.utc).isoformat()
         self.tool_call_count = 0
         self.rag_call_count = 0
+        self.memory_context = ""        # remembered case history (read-only context; set by the agent when memory is enabled)
 
     def add_step(self, action, data):
         """
@@ -89,4 +90,5 @@ class AgentState:
             "started_at": self.started_at,
             "tool_call_count": self.tool_call_count,
             "rag_call_count": self.rag_call_count,
+            "memory_context": self.memory_context,
         }
