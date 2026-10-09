@@ -8,22 +8,18 @@ STUDENT GOAL:
 
 AVAILABLE ACTIONS:
 - rag_retrieve: search university documents. action_input: {{"query": "<search query>"}}
-- call_tool: call one approved tool. action_input: {{"tool_name": "get_course_info"|"create_support_ticket"|"check_ticket_status", "arguments": {{...}}}}
+- call_tool: call one approved tool. action_input: {{"tool_name": "get_course_info"|"create_support_ticket", "arguments": {{...}}}}
 - answer: give the final answer now, if you have enough information. action_input: {{"response": "<final answer text>"}}
 - stop: stop and hand off to a human, or ask the student to clarify, if the request is too vague or cannot be resolved. action_input: {{"response": "<message to the student>"}}
 
-{memory_section}
-HISTORY SO FAR (most recent last):
+{memory_section}HISTORY SO FAR (most recent last):
 {history}
 
 RULES:
-- Only call_tool with: get_course_info, create_support_ticket, check_ticket_status.
-- Use check_ticket_status when the student asks about a prior ticket status.
+- Only call_tool with: get_course_info, create_support_ticket.
 - Do NOT repeat a rag_retrieve query or a call_tool (tool_name + arguments) that already appears in the history above.
 - If a tool lookup failed (course not found) and a RAG retrieval also found nothing relevant, the next step is usually call_tool with create_support_ticket, summarizing the issue.
 - If the goal is vague (e.g. "I have a problem") and the history gives you nothing to act on, choose stop and ask a clarifying question rather than guessing.
-- Memory is ASSISTIVE ONLY — never make grade, admissions, or fee decisions based on memory.
-- If memory conflicts with what the student says now, follow the student's current statement.
 - Respond with ONLY a single JSON object, no other text, no markdown fences, in exactly this shape:
 {{"action": "rag_retrieve|call_tool|answer|stop", "action_input": {{...}}, "reasoning": "<one short sentence>"}}
 """
@@ -59,18 +55,10 @@ class Planner:
         invalid action name), falls back to a safe "stop" decision rather
         than crashing the agent loop.
         """
-        # Build the optional memory section if the state has a non-empty context
-        memory_section = ""
-        if hasattr(state, "memory_context") and state.memory_context:
-            memory_section = (
-                f"MEMORY CONTEXT (prior history for this student):\n"
-                f"{state.memory_context}\n\n"
-            )
-
         prompt = PLANNING_PROMPT_TEMPLATE.format(
             goal=state.goal,
             history=self._format_history(state),
-            memory_section=memory_section,
+            memory_section=self._format_memory(state),
         )
 
         try:
@@ -99,6 +87,19 @@ class Planner:
         decision.setdefault("action_input", {})
         decision.setdefault("reasoning", "")
         return decision
+
+    @staticmethod
+    def _format_memory(state):
+        """MEMORY CONTEXT block, or "" when empty. It is background only: the student's
+        current goal and the rules below always take precedence over it."""
+        memory = getattr(state, "memory_context", "") or ""
+        if not memory.strip():
+            return ""
+        return (
+            "MEMORY CONTEXT (remembered from earlier sessions; background only - the current goal "
+            "above takes precedence, and do not assume the current issue is the same as a prior one "
+            "without confirming with the student):\n" + memory.strip() + "\n\n"
+        )
 
     @staticmethod
     def _format_history(state, max_entries=10):

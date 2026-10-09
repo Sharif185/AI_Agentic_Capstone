@@ -4,7 +4,6 @@ from models.model_client import ModelClient
 from rag.pipeline import RAGPipeline
 from tools.course_tool import CourseTool
 from tools.ticket_tool import TicketTool
-from tools.ticket_status_tool import TicketStatusTool
 from tools.approval_controller import ApprovalController
 from tools.tool_executor import ToolExecutor
 from agent.planner import Planner
@@ -16,8 +15,7 @@ load_dotenv()
 
 def main():
     print("=" * 60)
-    print("Student Support Agent - Bounded Multi-Step Agent (Week 6)")
-    print("With Memory: Cross-session ticket persistence")
+    print("Student Support Agent - Bounded Multi-Step Agent (Week 5)")
     print("=" * 60)
 
     # 1. Model client
@@ -26,63 +24,65 @@ def main():
     # 2. RAG pipeline
     rag_pipeline = RAGPipeline()
 
-    # 3. Week 6: Memory manager (starts without an active session)
+    # 2b. Memory (Week 6): SQLite case-history memory + per-conversation session state
     memory = MemoryManager()
 
-    # 4. Approved tools (Week 6: pass memory to ticket tools)
+    # 3. Approved tools (TicketTool also saves created tickets to memory)
     course_tool = CourseTool()
     ticket_tool = TicketTool(memory=memory)
-    ticket_status_tool = TicketStatusTool(memory=memory)
 
-    # 5. Approval controller
+    # 4. Approval controller
     approval_controller = ApprovalController()
 
-    # 6. Tool executor
+    # 5. Tool executor (existing Week 4 component — not bypassed or duplicated)
     tool_executor = ToolExecutor(approval_controller)
     tool_executor.register(course_tool)
     tool_executor.register(ticket_tool)
-    tool_executor.register(ticket_status_tool)
 
-    # 7. Agent with its own Planner and MemoryManager
+    # 6. Agent, with its own Planner
     planner = Planner(model)
     agent = StudentSupportAgent(
         model_client=model,
         rag_pipeline=rag_pipeline,
         tool_executor=tool_executor,
         planner=planner,
-        memory_manager=memory,
         max_iterations=5,
         max_tool_calls=3,
         max_rag_calls=2,
+        memory_manager=memory,
     )
 
-    print("\nDescribe what you need help with. Type 'exit' to quit.")
-    print("For cross-session memory, provide a student ID (e.g., 'student_001').\n")
-
-    # Start a session (can resume with a session_id, or start fresh)
-    user_id = input("Your student ID (press Enter for anonymous): ").strip() or None
+    # There is no real authentication in this app, so the student ID below is
+    # self-declared (NOT verified). Without one, no history is loaded or saved
+    # against a student.
+    user_id = input("Student ID (optional, Enter to skip - enables remembered tickets): ").strip() or None
     session_id = memory.start_session(user_id=user_id)
-    print(f"Session started: {session_id}\n")
+    print(f"[Session started: {session_id}" + (" | memory ON]" if user_id else " | no student ID: memory off]"))
 
-    while True:
-        goal = input("Student: ").strip()
+    print("\nDescribe what you need help with. Type 'exit' to quit.\n")
 
-        if goal.lower() == "exit":
-            memory.end_session()
-            print("Session saved. Goodbye!")
-            break
+    try:
+        while True:
+            goal = input("Student: ").strip()
 
-        if not goal:
-            print("Assistant: Please tell me what you need help with.")
-            continue
+            if goal.lower() == "exit":
+                print("Goodbye!")
+                break
 
-        # Run agent with user_id for memory context
-        result = agent.run(goal, user_id=user_id)
+            if not goal:
+                print("Assistant: Please tell me what you need help with.")
+                continue
 
-        print(f"\nAssistant: {result['response']}")
-        print(f"\n[Iterations: {result['iterations']}]")
-        print(f"[Stop reason: {result['stop_reason']}]")
-        print(f"[Trace saved to: {result['trace_file']}]\n")
+            result = agent.run(goal, user_id=user_id)
+
+            print(f"\nAssistant: {result['response']}")
+            print(f"\n[Iterations: {result['iterations']}]")
+            print(f"[Stop reason: {result['stop_reason']}]")
+            print(f"[Trace saved to: {result['trace_file']}]\n")
+    except (KeyboardInterrupt, EOFError):
+        print("\nSession interrupted.")
+    finally:
+        memory.end_session()  # always persist session metadata, even on errors/Ctrl+C
 
 
 if __name__ == "__main__":

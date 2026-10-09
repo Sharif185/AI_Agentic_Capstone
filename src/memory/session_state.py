@@ -1,134 +1,107 @@
+"""Session state: in-memory state for ONE conversation (Week 6).
+
+Kept separate from AgentState (one agent run) and PersistentMemory (SQLite).
+Timestamps are timezone-aware UTC ISO-8601 strings so they sort and compare
+consistently.
 """
-Session State — Week 6 Memory Layer
-
-Tracks a single conversation session between the student and the agent.
-Ephemeral: exists in-memory during the conversation, then optionally
-persisted to SQLite via PersistentMemory on session end.
-
-Author: Aloysious Mutagubya (Application/Integration Lead)
-"""
-
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
+
+SESSION_RETENTION_DAYS = 30
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def parse_ts(value: Any) -> Optional[datetime]:
+    """Parse an ISO timestamp (naive values are treated as UTC). None if invalid."""
+    if not isinstance(value, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 class SessionState:
-    """
-    In-memory state for one conversation session.
+    """State for a single conversation."""
 
-    Lifetime: Active conversation (max 30 days, then purged from DB).
-
-    Fields:
-        session_id          : Unique session identifier (SES-XXXXXXXX)
-        user_id             : Optional student identifier for cross-session memory
-        started_at          : ISO timestamp when session began
-        last_active         : ISO timestamp of most recent interaction
-        current_case        : Active ticket ID if a ticket was created this session
-        preferences         : In-session preferences dict (language, tone, etc.)
-        conversation_turns  : Count of student messages in this session
-    """
-
-    def __init__(self, session_id=None, user_id=None):
-        self.session_id = session_id or self._generate_id()
-        self.user_id = user_id
-        self.started_at = datetime.now(timezone.utc).isoformat()
-        self.last_active = self.started_at
-        self.current_case = None        # Active ticket ID (set when a ticket is created)
-        self.preferences = {}           # In-session preferences only
-        self.conversation_turns = 0
-
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
+    def __init__(self, session_id: Optional[str] = None, user_id: Optional[str] = None):
+        self.session_id: str = session_id or self._generate_id()
+        self.user_id: Optional[str] = user_id
+        self.started_at: str = _now_iso()
+        self.last_active: str = self.started_at
+        self.current_case: Optional[str] = None
+        # In-session ONLY. Never written to the database: only approved
+        # preferences are persisted, via PersistentMemory.save_preference().
+        self.preferences: Dict[str, Any] = {}
+        self.conversation_turns: int = 0
 
     @staticmethod
     def _generate_id() -> str:
-        """Generate a unique session ID with SES- prefix."""
         return f"SES-{uuid.uuid4().hex[:8]}"
 
-    # ------------------------------------------------------------------
-    # Update helpers
-    # ------------------------------------------------------------------
-
-    def touch(self):
-        """
-        Record a new interaction: update last_active timestamp and
-        increment the conversation turn counter.
-        Called once per student message.
-        """
-        self.last_active = datetime.now(timezone.utc).isoformat()
+    def touch(self) -> None:
+        """Record activity: update last_active and count one conversation turn."""
+        self.last_active = _now_iso()
         self.conversation_turns += 1
 
-    def set_current_case(self, ticket_id: str):
-        """
-        Record the active ticket for this session.
-        Called when create_support_ticket succeeds so the session
-        is linked to the ticket in persistent memory.
-        """
+    def set_current_case(self, ticket_id: Optional[str]) -> None:
+        """Associate this session with a ticket (the active case)."""
         self.current_case = ticket_id
+        self.last_active = _now_iso()
 
-    def set_preference(self, key: str, value):
-        """Store an in-session preference (e.g., preferred language)."""
-        self.preferences[key] = value
-
-    # ------------------------------------------------------------------
-    # Context export
-    # ------------------------------------------------------------------
-
-    def get_context(self) -> dict:
-        """
-        Return a lightweight dict suitable for injecting into the agent.
-        Only includes fields the agent needs to reason about — not all
-        session metadata.
-        """
+    def get_context(self) -> Dict[str, Any]:
+        """Small dict suitable for injecting into the agent (no timestamps)."""
         return {
             "session_id": self.session_id,
             "user_id": self.user_id,
             "current_case": self.current_case,
+            "preferences": dict(self.preferences),
             "conversation_turns": self.conversation_turns,
-            "preferences": self.preferences,
         }
 
-    # ------------------------------------------------------------------
-    # Serialisation / deserialisation (for DB persistence)
-    # ------------------------------------------------------------------
+    def is_expired(self, days: int = SESSION_RETENTION_DAYS, now: Optional[datetime] = None) -> bool:
+        """True when last_active is older than the retention window (or unreadable)."""
+        last = parse_ts(self.last_active)
+        if last is None:
+            return True
+        now = now or datetime.now(timezone.utc)
+        return now - last > timedelta(days=days)
 
-    def to_dict(self) -> dict:
-        """
-        Serialise the full session state to a plain dict.
-        Used by PersistentMemory.save_session().
-        """
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "session_id": self.session_id,
             "user_id": self.user_id,
             "started_at": self.started_at,
             "last_active": self.last_active,
             "current_case": self.current_case,
-            "preferences": self.preferences,
+            "preferences": dict(self.preferences),
             "conversation_turns": self.conversation_turns,
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "SessionState":
-        """
-        Reconstruct a SessionState from a persisted dict.
-        Used by PersistentMemory.load_session().
-        """
-        session = cls(
-            session_id=data["session_id"],
-            user_id=data.get("user_id"),
+    def from_dict(cls, data: Any) -> "SessionState":
+        """Rebuild a session; missing or invalid fields fall back to safe defaults."""
+        data = data if isinstance(data, dict) else {}
+        sid = data.get("session_id")
+        uid = data.get("user_id")
+        obj = cls(
+            session_id=sid if isinstance(sid, str) and sid.strip() else None,
+            user_id=uid if isinstance(uid, str) and uid.strip() else None,
         )
-        session.started_at = data.get("started_at", session.started_at)
-        session.last_active = data.get("last_active", session.last_active)
-        session.current_case = data.get("current_case")
-        session.preferences = data.get("preferences", {})
-        session.conversation_turns = data.get("conversation_turns", 0)
-        return session
-
-    def __repr__(self) -> str:
-        return (
-            f"SessionState(session_id={self.session_id!r}, "
-            f"user_id={self.user_id!r}, "
-            f"turns={self.conversation_turns}, "
-            f"current_case={self.current_case!r})"
-        )
+        started = data.get("started_at")
+        if parse_ts(started):
+            obj.started_at = started
+        last = data.get("last_active")
+        obj.last_active = last if parse_ts(last) else obj.started_at
+        case = data.get("current_case")
+        obj.current_case = case if isinstance(case, str) and case.strip() else None
+        prefs = data.get("preferences")
+        obj.preferences = dict(prefs) if isinstance(prefs, dict) else {}
+        turns = data.get("conversation_turns")
+        obj.conversation_turns = turns if isinstance(turns, int) and not isinstance(turns, bool) and turns >= 0 else 0
+        return obj

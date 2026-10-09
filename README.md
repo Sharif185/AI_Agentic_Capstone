@@ -52,3 +52,36 @@ python src/main.py
 4. Stored in Chroma vector database
 5. Retrieved via similarity search (Top-3)
 6. Passed to GPT-4o-mini with system prompt
+
+## Agent Architecture
+
+The Student Support Agent uses a bounded Sense -> Plan -> Act -> Observe
+-> Evaluate loop.
+
+### Running the Agent
+
+python -m src.agent.agent "I want to register for BSE4104"
+
+### Agent Limits
+
+| Limit          | Value |
+| -------------- | ----- |
+| Max iterations | 5     |
+| Max tool calls | 3     |
+| Max RAG calls  | 2     |
+
+### Stop Conditions
+
+- Goal achieved
+- Max iterations reached
+- Max tool calls reached
+- No progress detected
+- Human hand-off needed
+
+### Execution Traces
+
+Traces are saved to evidence/traces/ as JSON files.
+
+### Example Trace
+
+See evidence/traces/TRACE-\*.json for full execution records.

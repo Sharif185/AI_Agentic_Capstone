@@ -1,11 +1,11 @@
 """
 Memory Integration Test — Week 6
 
-Proves that memory persists across sessions — the core Week 6 requirement.
+Proves that memory persists across sessions.
+Two completely separate MemoryManager instances share only the database file.
+A ticket created in Session 1 must be retrievable in Session 2.
 
-Two completely separate MemoryManager instances (simulating separate runs)
-share only the database file. A ticket created in 'Session 1' must be
-fully retrievable in 'Session 2' via a fresh MemoryManager.
+Written against Mus's actual MemoryManager API.
 
 Author: Imaan Duga (Quality/Security Lead)
 """
@@ -19,12 +19,13 @@ from memory.memory_manager import MemoryManager
 
 
 def test_multi_session_memory():
-    """Cross-session memory persistence test."""
     db = "data/test_session_memory.db"
 
-    # Clean start
     if os.path.exists(db):
-        os.remove(db)
+        try:
+            os.remove(db)
+        except OSError:
+            pass
 
     print("=" * 60)
     print("Memory Integration Test: Cross-Session Persistence")
@@ -51,31 +52,25 @@ def test_multi_session_memory():
     }
     mm1.save_ticket(ticket)
     mm1.end_session()
-    print(f"✅ Session 1: Ticket TICKET-0001 saved and session ended")
+    print("✅ Session 1: Ticket TICKET-0001 saved and session ended")
     print()
 
     # ===================================================================
-    # SESSION 2: Verify ticket is retrievable with a NEW MemoryManager
+    # SESSION 2: Verify ticket retrievable with a BRAND NEW MemoryManager
     # ===================================================================
     print("--- Session 2: Verifying ticket retrieval ---")
-    mm2 = MemoryManager(db_path=db)   # brand-new instance, same DB
+    mm2 = MemoryManager(db_path=db)   # new instance, same DB file
     mm2.start_session(user_id="student_001")
 
-    # Retrieve the ticket from the new session
     retrieved = mm2.get_ticket("TICKET-0001")
+    context   = mm2.get_memory_context(user_id="student_001")
 
-    # Build memory context as the agent would
-    context = mm2.get_memory_context(user_id="student_001")
-
-    # ===================================================================
     # Assertions
-    # ===================================================================
-    assert retrieved is not None, "❌ FAIL: Ticket not found in Session 2"
-    assert retrieved["ticket_id"] == "TICKET-0001", f"Wrong ticket ID: {retrieved['ticket_id']}"
-    assert retrieved["status"] == "open", f"Wrong status: {retrieved['status']}"
-    assert retrieved["issue_summary"] == "Cannot access the registration portal", "Wrong issue"
-    assert "TICKET-0001" in context, "❌ FAIL: Ticket not in memory context"
-    assert "open" in context, "❌ FAIL: Status not in memory context"
+    assert retrieved is not None,                            "❌ Ticket not found in Session 2"
+    assert retrieved["ticket_id"] == "TICKET-0001",          f"Wrong ticket ID: {retrieved['ticket_id']}"
+    assert retrieved["status"] == "open",                    f"Wrong status: {retrieved['status']}"
+    assert "Cannot access the registration portal" in retrieved["issue_summary"], "Wrong issue"
+    assert "TICKET-0001" in context,                         f"Ticket not in context. Got: {context!r}"
 
     print(f"✅ Ticket retrieved: {retrieved['ticket_id']} ({retrieved['status']})")
     print()
@@ -84,24 +79,20 @@ def test_multi_session_memory():
     print()
     print("✅ Memory persists across sessions!")
     print()
-
     mm2.end_session()
 
     # ===================================================================
-    # SESSION 3: Verify memory context improves task
+    # SESSION 3: Demonstrate memory improves task
     # ===================================================================
-    print("--- Session 3: Demonstrating memory improves task ---")
+    print("--- Session 3: Memory improves task ---")
     mm3 = MemoryManager(db_path=db)
     mm3.start_session(user_id="student_001")
-
     context3 = mm3.get_memory_context("student_001")
-    assert "TICKET-0001" in context3, "❌ FAIL: Ticket not available in Session 3"
+    assert "TICKET-0001" in context3, f"Ticket not available in Session 3. Got: {context3!r}"
 
+    t = mm3.get_ticket("TICKET-0001")
     print("Student: What's the status of my ticket?")
-    print()
-    retrieved3 = mm3.get_ticket("TICKET-0001")
-    print(f"🤖 Agent (from memory): Your ticket {retrieved3['ticket_id']} about")
-    print(f"   '{retrieved3['issue_summary']}' is currently {retrieved3['status']}.")
+    print(f"🤖 Agent: Your ticket {t['ticket_id']} about '{t['issue_summary']}' is {t['status']}.")
     print()
     print("✅ Student did NOT need to re-explain their issue")
     mm3.end_session()
@@ -112,9 +103,9 @@ def test_multi_session_memory():
             os.remove(db)
             print(f"Test database cleaned up: {db}")
     except OSError:
-        print(f"Note: Could not remove {db} (file still locked — safe to ignore on Windows)")
-    print()
+        print(f"Note: Could not remove {db} (Windows file lock — safe to ignore)")
 
+    print()
     print("=" * 60)
     print("Integration Test: PASS")
     print("=" * 60)

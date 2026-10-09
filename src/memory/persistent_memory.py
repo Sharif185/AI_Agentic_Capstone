@@ -1,330 +1,288 @@
+"""SQLite-backed persistent memory (Week 6).
+
+Justified use case: CASE HISTORY. Stores sessions (metadata only), tickets
+and approved preferences. Never stores conversation transcripts, credentials,
+financial data, grades or medical data. All SQL uses bound parameters.
 """
-Persistent Memory — Week 6 Memory Layer
-
-SQLite-backed storage for cross-session data: tickets (case history),
-session metadata, and student preferences.
-
-Three tables:
-  - sessions      : saved session metadata (30-day retention)
-  - case_history  : support tickets (90 days open, 1 year closed)
-  - preferences   : approved student preferences
-
-Author: Aloysious Mutagubya (Application/Integration Lead)
-"""
-
 import json
 import os
+import re
 import sqlite3
-from datetime import datetime, timezone, timedelta
+from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
-from memory.session_state import SessionState
+from memory.session_state import SessionState, parse_ts
+
+SESSION_RETENTION_DAYS = 30
+ACTIVE_TICKET_RETENTION_DAYS = 90
+CLOSED_TICKET_RETENTION_DAYS = 365
+CLOSED_STATUSES = ("closed", "resolved")
+
+TICKET_FIELDS = (
+    "ticket_id", "student_name", "student_id", "issue_summary",
+    "priority", "category", "status", "created_at", "updated_at",
+)
+
+# Preference keys that must never be persisted (best-effort blocklist).
+_PROHIBITED_KEY = re.compile(
+    r"pass(word|code)?|pwd|secret|token|credential|pin\b|card|iban|account|bank|"
+    r"salary|fee|payment|grade|gpa|mark|transcript|medical|health|diagnos|disab",
+    re.IGNORECASE,
+)
+# Redacted from ticket summaries before storage (best-effort, not a guarantee).
+_CRED_PHRASE = re.compile(r"(?i)\b(password|passcode|pin|pwd)\b\s*(is|:|=)\s*\S+")
+_LONG_DIGITS = re.compile(r"\b(?:\d[ -]?){13,19}\b")
+
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS sessions (
+    session_id TEXT PRIMARY KEY,
+    user_id TEXT,
+    started_at TEXT NOT NULL,
+    last_active TEXT NOT NULL,
+    current_case TEXT,
+    conversation_turns INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_last_active ON sessions(last_active);
+
+CREATE TABLE IF NOT EXISTS case_history (
+    ticket_id TEXT PRIMARY KEY,
+    session_id TEXT REFERENCES sessions(session_id) ON DELETE SET NULL,
+    student_name TEXT NOT NULL,
+    student_id TEXT,
+    issue_summary TEXT NOT NULL,
+    priority TEXT NOT NULL DEFAULT 'medium',
+    category TEXT NOT NULL DEFAULT 'other',
+    status TEXT NOT NULL DEFAULT 'open',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_case_student ON case_history(student_id);
+
+CREATE TABLE IF NOT EXISTS preferences (
+    user_id TEXT NOT NULL,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+    approved INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, key)
+);
+"""
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def sanitize_text(text: str) -> str:
+    """Redact credential-like phrases and long digit runs (card/account numbers)."""
+    text = _CRED_PHRASE.sub(lambda m: f"{m.group(1)} [redacted]", text)
+    return _LONG_DIGITS.sub("[redacted-number]", text)
 
 
 class PersistentMemory:
-    """
-    SQLite-backed persistent memory store.
-
-    Owns the database schema, all CRUD operations, and retention
-    enforcement. Does NOT hold any in-memory session state — that
-    lives in SessionState. This class is purely a storage layer.
-
-    Usage:
-        pm = PersistentMemory('data/memory.db')
-        pm.save_ticket({'ticket_id': 'TICKET-0001', ...})
-        ticket = pm.get_ticket('TICKET-0001')
-    """
+    """CRUD + retention for sessions, tickets and approved preferences."""
 
     def __init__(self, db_path: str = "data/memory.db"):
         self.db_path = db_path
-        # Ensure the data directory exists before SQLite tries to create the file
-        dir_name = os.path.dirname(db_path)
-        if dir_name:
-            os.makedirs(dir_name, exist_ok=True)
+        directory = os.path.dirname(db_path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
         self._create_tables()
 
-    # ------------------------------------------------------------------
-    # Schema setup
-    # ------------------------------------------------------------------
-
-    def _create_tables(self):
-        """Create all three tables if they don't already exist."""
-        with self._connect() as conn:
-            conn.executescript("""
-                CREATE TABLE IF NOT EXISTS sessions (
-                    session_id          TEXT PRIMARY KEY,
-                    user_id             TEXT,
-                    started_at          TEXT NOT NULL,
-                    last_active         TEXT NOT NULL,
-                    current_case        TEXT,
-                    preferences         TEXT DEFAULT '{}',
-                    conversation_turns  INTEGER DEFAULT 0
-                );
-
-                CREATE TABLE IF NOT EXISTS case_history (
-                    ticket_id       TEXT PRIMARY KEY,
-                    student_name    TEXT NOT NULL,
-                    student_id      TEXT,
-                    issue_summary   TEXT NOT NULL,
-                    priority        TEXT DEFAULT 'medium',
-                    category        TEXT DEFAULT 'other',
-                    status          TEXT DEFAULT 'open',
-                    created_at      TEXT NOT NULL,
-                    updated_at      TEXT NOT NULL,
-                    session_id      TEXT
-                );
-
-                CREATE TABLE IF NOT EXISTS preferences (
-                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id     TEXT NOT NULL,
-                    key         TEXT NOT NULL,
-                    value       TEXT NOT NULL,
-                    approved    INTEGER DEFAULT 1,
-                    created_at  TEXT NOT NULL,
-                    UNIQUE(user_id, key)
-                );
-            """)
-
-    def _connect(self) -> sqlite3.Connection:
-        """Return a new SQLite connection with row_factory set."""
+    # ------------------------------------------------------------------ infra
+    @contextmanager
+    def _connect(self):
+        """Open a connection, commit on success, roll back on error, always close."""
         conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row   # rows accessible as dicts
-        return conn
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
-    # ------------------------------------------------------------------
-    # Session operations
-    # ------------------------------------------------------------------
+    def _create_tables(self) -> None:
+        with self._connect() as conn:
+            conn.executescript(_SCHEMA)
 
-    def save_session(self, session_state: SessionState):
-        """
-        Insert or replace a session record in the sessions table.
-        Called by MemoryManager.end_session().
-        """
-        data = session_state.to_dict()
+    # --------------------------------------------------------------- sessions
+    def save_session(self, session_state: SessionState) -> None:
+        """Insert or update session METADATA. In-session preferences are not stored."""
+        s = session_state
         with self._connect() as conn:
             conn.execute(
-                """
-                INSERT OR REPLACE INTO sessions
-                    (session_id, user_id, started_at, last_active,
-                     current_case, preferences, conversation_turns)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    data["session_id"],
-                    data.get("user_id"),
-                    data["started_at"],
-                    data["last_active"],
-                    data.get("current_case"),
-                    json.dumps(data.get("preferences", {})),
-                    data.get("conversation_turns", 0),
-                ),
+                """INSERT INTO sessions (session_id, user_id, started_at, last_active,
+                                         current_case, conversation_turns)
+                   VALUES (?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(session_id) DO UPDATE SET
+                       user_id=excluded.user_id, last_active=excluded.last_active,
+                       current_case=excluded.current_case,
+                       conversation_turns=excluded.conversation_turns""",
+                (s.session_id, s.user_id, s.started_at, s.last_active,
+                 s.current_case, s.conversation_turns),
             )
 
-    def load_session(self, session_id: str):
-        """
-        Load a session by ID. Returns a SessionState if found, else None.
-        Called by MemoryManager.resume_session().
-        """
+    def load_session(self, session_id: str) -> Optional[SessionState]:
+        """Return the stored session or None if it does not exist."""
         with self._connect() as conn:
-            row = conn.execute(
-                "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
+            row = conn.execute("SELECT * FROM sessions WHERE session_id = ?", (session_id,)).fetchone()
+        return SessionState.from_dict(dict(row)) if row else None
+
+    def delete_session(self, session_id: str) -> bool:
+        """Delete one session record (its tickets are kept, unlinked)."""
+        with self._connect() as conn:
+            cur = conn.execute("DELETE FROM sessions WHERE session_id = ?", (session_id,))
+            return cur.rowcount > 0
+
+    def purge_old_sessions(self, days: int = SESSION_RETENTION_DAYS, now: Optional[datetime] = None) -> int:
+        """Delete sessions not active for more than `days`. Returns rows removed."""
+        cutoff = ((now or _now()) - timedelta(days=days)).isoformat()
+        with self._connect() as conn:
+            cur = conn.execute("DELETE FROM sessions WHERE last_active < ?", (cutoff,))
+            return cur.rowcount
+
+    # ---------------------------------------------------------------- tickets
+    def save_ticket(self, ticket: Dict[str, Any], session_id: Optional[str] = None) -> Dict[str, Any]:
+        """Insert or update a ticket (keyed by ticket_id, so repeats never duplicate).
+
+        Only whitelisted fields are stored; extra keys are dropped. Raises
+        ValueError for missing required fields, or if the ticket_id already
+        belongs to a different student (never overwrite someone else's record).
+        """
+        if not isinstance(ticket, dict):
+            raise ValueError("ticket must be a dict")
+        ticket_id = ticket.get("ticket_id")
+        name = ticket.get("student_name")
+        summary = ticket.get("issue_summary")
+        if not (isinstance(ticket_id, str) and ticket_id.strip()):
+            raise ValueError("ticket_id is required")
+        if not (isinstance(name, str) and name.strip()):
+            raise ValueError("student_name is required")
+        if not (isinstance(summary, str) and summary.strip()):
+            raise ValueError("issue_summary is required")
+
+        now = _now().isoformat()
+        created = ticket.get("created_at") if parse_ts(ticket.get("created_at")) else now
+        updated = ticket.get("updated_at") if parse_ts(ticket.get("updated_at")) else created
+        student_id = ticket.get("student_id")
+        student_id = student_id.strip() if isinstance(student_id, str) and student_id.strip() else None
+
+        with self._connect() as conn:
+            existing = conn.execute(
+                "SELECT student_id FROM case_history WHERE ticket_id = ?", (ticket_id,)
             ).fetchone()
-
-        if row is None:
-            return None
-
-        data = dict(row)
-        data["preferences"] = json.loads(data.get("preferences") or "{}")
-        return SessionState.from_dict(data)
-
-    def purge_old_sessions(self, days: int = 30):
-        """
-        Delete session records whose last_active is older than `days`.
-        Retention policy: 30 days from last activity.
-        Returns the number of rows deleted.
-        """
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-        with self._connect() as conn:
-            cursor = conn.execute(
-                "DELETE FROM sessions WHERE last_active < ?", (cutoff,)
-            )
-            return cursor.rowcount
-
-    # ------------------------------------------------------------------
-    # Ticket (case history) operations
-    # ------------------------------------------------------------------
-
-    def save_ticket(self, ticket: dict, session_id: str = None):
-        """
-        Insert or replace a ticket in the case_history table.
-
-        ticket must have at minimum:
-            ticket_id, student_name, issue_summary, created_at, updated_at
-
-        Optional fields default to sensible values.
-        session_id links the ticket to the session that created it.
-        """
-        now = datetime.now(timezone.utc).isoformat()
-        with self._connect() as conn:
+            if existing and existing["student_id"] and existing["student_id"] != student_id:
+                raise ValueError(f"ticket_id {ticket_id} already belongs to a different student")
             conn.execute(
-                """
-                INSERT OR REPLACE INTO case_history
-                    (ticket_id, student_name, student_id, issue_summary,
-                     priority, category, status, created_at, updated_at, session_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    ticket["ticket_id"],
-                    ticket.get("student_name", "Unknown"),
-                    ticket.get("student_id"),
-                    ticket.get("issue_summary", ""),
-                    ticket.get("priority", "medium"),
-                    ticket.get("category", "other"),
-                    ticket.get("status", "open"),
-                    ticket.get("created_at", now),
-                    ticket.get("updated_at", now),
-                    session_id or ticket.get("session_id"),
-                ),
+                """INSERT INTO case_history (ticket_id, session_id, student_name, student_id,
+                       issue_summary, priority, category, status, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(ticket_id) DO UPDATE SET
+                       session_id=COALESCE(excluded.session_id, case_history.session_id),
+                       student_name=excluded.student_name, student_id=excluded.student_id,
+                       issue_summary=excluded.issue_summary, priority=excluded.priority,
+                       category=excluded.category, status=excluded.status,
+                       updated_at=excluded.updated_at""",
+                (ticket_id.strip(), session_id, name.strip(), student_id,
+                 sanitize_text(summary.strip())[:500],
+                 ticket.get("priority") or "medium", ticket.get("category") or "other",
+                 ticket.get("status") or "open", created, updated),
             )
+        return self.get_ticket(ticket_id.strip())
 
-    def get_ticket(self, ticket_id: str) -> dict | None:
-        """
-        Retrieve a single ticket by ticket_id.
-        Returns a dict if found, None if not.
-        """
+    @staticmethod
+    def _row_to_ticket(row: sqlite3.Row) -> Dict[str, Any]:
+        d = dict(row)
+        return {k: d[k] for k in TICKET_FIELDS} | {"session_id": d["session_id"]}
+
+    def get_ticket(self, ticket_id: str) -> Optional[Dict[str, Any]]:
+        """Return the ticket dict or None. (No access check: see MemoryManager.)"""
         with self._connect() as conn:
-            row = conn.execute(
-                "SELECT * FROM case_history WHERE ticket_id = ?", (ticket_id,)
-            ).fetchone()
-        return dict(row) if row else None
+            row = conn.execute("SELECT * FROM case_history WHERE ticket_id = ?", (ticket_id,)).fetchone()
+        return self._row_to_ticket(row) if row else None
 
-    def get_tickets_by_student(self, student_id: str) -> list[dict]:
-        """
-        Retrieve all tickets for a student, ordered most-recent first.
-        Matches on student_id column.
-        Returns a list of dicts (empty if no tickets found).
-        """
+    def get_tickets_by_student(self, student_id: str) -> List[Dict[str, Any]]:
+        """All tickets for exactly this student_id, newest first."""
+        if not student_id:
+            return []
         with self._connect() as conn:
             rows = conn.execute(
-                """
-                SELECT * FROM case_history
-                WHERE student_id = ?
-                ORDER BY created_at DESC
-                """,
+                "SELECT * FROM case_history WHERE student_id = ? ORDER BY created_at DESC, ticket_id DESC",
                 (student_id,),
             ).fetchall()
-        return [dict(row) for row in rows]
-
-    def update_ticket_status(self, ticket_id: str, status: str) -> bool:
-        """
-        Update a ticket's status (e.g., open → closed).
-        Returns True if a row was updated, False if not found.
-        """
-        now = datetime.now(timezone.utc).isoformat()
-        with self._connect() as conn:
-            cursor = conn.execute(
-                "UPDATE case_history SET status = ?, updated_at = ? WHERE ticket_id = ?",
-                (status, now, ticket_id),
-            )
-            return cursor.rowcount > 0
+        return [self._row_to_ticket(r) for r in rows]
 
     def delete_ticket(self, ticket_id: str) -> bool:
-        """
-        Permanently delete a ticket. Used by delete_all_data() and
-        right-to-be-forgotten requests.
-        Returns True if a row was deleted, False if not found.
-        """
+        """Delete exactly one ticket. Returns True if a row was removed."""
         with self._connect() as conn:
-            cursor = conn.execute(
-                "DELETE FROM case_history WHERE ticket_id = ?", (ticket_id,)
-            )
-            return cursor.rowcount > 0
+            cur = conn.execute("DELETE FROM case_history WHERE ticket_id = ?", (ticket_id,))
+            return cur.rowcount > 0
 
-    def purge_old_tickets(self, status: str = "closed", days: int = 365) -> int:
-        """
-        Delete tickets of a given status older than `days`.
-        Retention policy:
-          - open tickets:   90 days from created_at  (call with status='open',   days=90)
-          - closed tickets: 1 year from updated_at   (call with status='closed', days=365)
-        Returns number of rows deleted.
-        """
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-        date_col = "updated_at" if status == "closed" else "created_at"
+    def purge_expired_tickets(
+        self,
+        active_days: int = ACTIVE_TICKET_RETENTION_DAYS,
+        closed_days: int = CLOSED_TICKET_RETENTION_DAYS,
+        now: Optional[datetime] = None,
+    ) -> int:
+        """Delete open tickets idle > active_days and closed ones idle > closed_days
+        (measured from updated_at). Returns rows removed."""
+        now = now or _now()
+        active_cut = (now - timedelta(days=active_days)).isoformat()
+        closed_cut = (now - timedelta(days=closed_days)).isoformat()
+        marks = ",".join("?" for _ in CLOSED_STATUSES)
         with self._connect() as conn:
-            cursor = conn.execute(
-                f"DELETE FROM case_history WHERE status = ? AND {date_col} < ?",
-                (status, cutoff),
+            c1 = conn.execute(
+                f"DELETE FROM case_history WHERE status NOT IN ({marks}) AND updated_at < ?",
+                (*CLOSED_STATUSES, active_cut),
             )
-            return cursor.rowcount
+            c2 = conn.execute(
+                f"DELETE FROM case_history WHERE status IN ({marks}) AND updated_at < ?",
+                (*CLOSED_STATUSES, closed_cut),
+            )
+            return c1.rowcount + c2.rowcount
 
-    # ------------------------------------------------------------------
-    # Preference operations
-    # ------------------------------------------------------------------
-
-    def save_preference(self, user_id: str, key: str, value, approved: bool = True):
-        """
-        Upsert a user preference.
-        Only approved preferences are stored (approved=True by default).
-        Ignores unapproved preferences to enforce consent.
-        """
-        if not approved:
-            return  # Never store preferences the student hasn't approved
-
-        now = datetime.now(timezone.utc).isoformat()
+    # ------------------------------------------------------------ preferences
+    def save_preference(self, user_id: str, key: str, value: Any, approved: bool = True) -> bool:
+        """Persist a preference ONLY if approved and not prohibited. Returns True if stored."""
+        if not approved or not user_id or not isinstance(key, str) or not key.strip():
+            return False
+        text = value if isinstance(value, str) else json.dumps(value)
+        if _PROHIBITED_KEY.search(key) or _LONG_DIGITS.search(text) or _CRED_PHRASE.search(text):
+            return False
         with self._connect() as conn:
             conn.execute(
-                """
-                INSERT INTO preferences (user_id, key, value, approved, created_at)
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value, approved = excluded.approved
-                """,
-                (user_id, key, str(value), int(approved), now),
+                """INSERT INTO preferences (user_id, key, value, approved, updated_at)
+                   VALUES (?, ?, ?, 1, ?)
+                   ON CONFLICT(user_id, key) DO UPDATE SET
+                       value=excluded.value, updated_at=excluded.updated_at""",
+                (user_id, key.strip(), json.dumps(value), _now().isoformat()),
             )
+        return True
 
-    def get_preferences(self, user_id: str) -> dict:
-        """
-        Retrieve all approved preferences for a user as a flat dict.
-        Returns empty dict if no preferences found.
-        """
+    def get_preferences(self, user_id: str) -> Dict[str, Any]:
+        """Approved preferences for this user as {key: value}."""
+        if not user_id:
+            return {}
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT key, value FROM preferences WHERE user_id = ? AND approved = 1",
+                "SELECT key, value FROM preferences WHERE user_id = ? AND approved = 1 ORDER BY key",
                 (user_id,),
             ).fetchall()
-        return {row["key"]: row["value"] for row in rows}
+        return {r["key"]: json.loads(r["value"]) for r in rows}
 
-    def delete_preferences(self, user_id: str) -> int:
-        """Delete all preferences for a user (right to be forgotten)."""
+    # --------------------------------------------------------------- deletion
+    def delete_user_data(self, user_id: str) -> Dict[str, int]:
+        """Delete every row tied to user_id, in one transaction."""
+        if not user_id:
+            return {"tickets": 0, "sessions": 0, "preferences": 0}
         with self._connect() as conn:
-            cursor = conn.execute(
-                "DELETE FROM preferences WHERE user_id = ?", (user_id,)
-            )
-            return cursor.rowcount
-
-    def delete_sessions(self, user_id: str) -> int:
-        """Delete all sessions for a user (right to be forgotten)."""
-        with self._connect() as conn:
-            cursor = conn.execute(
-                "DELETE FROM sessions WHERE user_id = ?", (user_id,)
-            )
-            return cursor.rowcount
-
-    # ------------------------------------------------------------------
-    # Utility
-    # ------------------------------------------------------------------
-
-    def get_stats(self) -> dict:
-        """Return basic DB stats (useful for debugging and monitoring)."""
-        with self._connect() as conn:
-            n_sessions = conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0]
-            n_tickets = conn.execute("SELECT COUNT(*) FROM case_history").fetchone()[0]
-            n_open = conn.execute(
-                "SELECT COUNT(*) FROM case_history WHERE status='open'"
-            ).fetchone()[0]
-            n_prefs = conn.execute("SELECT COUNT(*) FROM preferences").fetchone()[0]
-        return {
-            "sessions": n_sessions,
-            "tickets_total": n_tickets,
-            "tickets_open": n_open,
-            "preferences": n_prefs,
-            "db_path": self.db_path,
-        }
+            t = conn.execute("DELETE FROM case_history WHERE student_id = ?", (user_id,)).rowcount
+            s = conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,)).rowcount
+            p = conn.execute("DELETE FROM preferences WHERE user_id = ?", (user_id,)).rowcount
+        return {"tickets": t, "sessions": s, "preferences": p}

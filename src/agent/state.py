@@ -30,7 +30,7 @@ class AgentState:
         self.started_at = datetime.now(timezone.utc).isoformat()
         self.tool_call_count = 0
         self.rag_call_count = 0
-        self.memory_context = ""        # NEW Week 6: injected memory context for planning
+        self.memory_context = ""        # remembered case history (read-only context; set by the agent when memory is enabled)
 
     def add_step(self, action, data):
         """

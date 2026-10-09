@@ -1,236 +1,177 @@
+"""MemoryManager: coordinates SessionState (one conversation) with
+PersistentMemory (SQLite). Memory is assistive only: it never decides
+grades, admissions or fees, and current instructions always win.
+
+Identity note: the app has no real authentication. `user_id` is whatever the
+caller supplies (self-declared). Access control here keys on that value and on
+the active session; it is NOT a substitute for real authentication.
 """
-Memory Manager — Week 6 Memory Layer
+from typing import Any, Dict, Optional
 
-High-level interface that coordinates SessionState (ephemeral) and
-PersistentMemory (SQLite). This is the single entry-point the agent
-and demo scripts use — they never touch PersistentMemory directly.
-
-Author: Aloysious Mutagubya (Application/Integration Lead)
-"""
-
+from memory.persistent_memory import PersistentMemory, SESSION_RETENTION_DAYS
 from memory.session_state import SessionState
-from memory.persistent_memory import PersistentMemory
 
-# Maximum tickets shown in the memory context injected into the agent prompt.
-# Keeps prompts from growing unboundedly when a student has many tickets.
-MAX_CONTEXT_TICKETS = 3
+MAX_CONTEXT_TICKETS = 5
+MAX_SUMMARY_CHARS = 120
 
 
 class MemoryManager:
-    """
-    Coordinates session state and persistent memory.
-
-    Usage (new session):
-        mm = MemoryManager()
-        session_id = mm.start_session(user_id='student_001')
-        mm.save_ticket({'ticket_id': 'TICKET-0001', ...})
-        context = mm.get_memory_context('student_001')
-        mm.end_session()
-
-    Usage (resume existing session):
-        mm = MemoryManager()
-        found = mm.resume_session('SES-abc12345')
-        if not found:
-            mm.start_session(user_id='student_001')
-    """
+    """Session lifecycle, ticket persistence, memory context and deletion."""
 
     def __init__(self, db_path: str = "data/memory.db"):
         self.persistent = PersistentMemory(db_path)
-        self.current_session: SessionState | None = None
+        self.current_session: Optional[SessionState] = None
 
-    # ------------------------------------------------------------------
-    # Session lifecycle
-    # ------------------------------------------------------------------
-
-    def start_session(self, user_id: str = None) -> str:
-        """
-        Start a brand-new session. Returns the new session_id.
-
-        Parameters
-        ----------
-        user_id : str, optional
-            Student identifier for cross-session memory lookups.
-            If None, memory context will be empty (anonymous session).
-        """
+    # -------------------------------------------------------------- sessions
+    def start_session(self, user_id: Optional[str] = None) -> str:
+        """Enforce retention, create + persist a new session, return its ID."""
+        self.purge_expired()
         self.current_session = SessionState(user_id=user_id)
+        self.persistent.save_session(self.current_session)
         return self.current_session.session_id
 
-    def resume_session(self, session_id: str) -> bool:
-        """
-        Attempt to resume a previously saved session.
+    def resume_session(self, session_id: str, user_id: Optional[str] = None) -> bool:
+        """Restore a stored session if it exists and is within the 30-day window.
 
-        Returns True if the session was found and loaded, False if not.
-        The caller should fall back to start_session() on False.
+        If user_id is given it must match the stored owner. Returns False
+        (and leaves the current session untouched) otherwise.
         """
-        session = self.persistent.load_session(session_id)
-        if session:
-            self.current_session = session
-            self.current_session.touch()  # Mark as active again
-            return True
+        stored = self.persistent.load_session(session_id)
+        if stored is None or stored.is_expired(SESSION_RETENTION_DAYS):
+            return False
+        if user_id is not None and stored.user_id != user_id:
+            return False
+        stored.touch()
+        self.current_session = stored
+        self.persistent.save_session(stored)
+        return True
+
+    def end_session(self) -> bool:
+        """Persist and clear the active session. False if there was none."""
+        if self.current_session is None:
+            return False
+        self.persistent.save_session(self.current_session)
+        self.current_session = None
+        return True
+
+    def record_turn(self) -> None:
+        """Count one conversation turn and persist session metadata."""
+        if self.current_session is not None:
+            self.current_session.touch()
+            self.persistent.save_session(self.current_session)
+
+    # --------------------------------------------------------------- tickets
+    def save_ticket(self, ticket: Dict[str, Any]) -> Dict[str, Any]:
+        """Persist a ticket and link it to the current session.
+
+        Requires an active session. If the session has a user_id, the ticket's
+        student_id defaults to it, and a different student_id is rejected
+        (ValueError) so one student cannot file memory under another's name.
+        """
+        sess = self.current_session
+        if sess is None:
+            raise ValueError("no active session")
+        ticket = dict(ticket)
+        sid = ticket.get("student_id")
+        if sess.user_id:
+            if not sid:
+                ticket["student_id"] = sess.user_id
+            elif sid != sess.user_id:
+                raise ValueError("ticket student_id does not match the session user")
+        self.persistent.save_session(sess)  # FK target must exist first
+        saved = self.persistent.save_ticket(ticket, session_id=sess.session_id)
+        sess.set_current_case(saved["ticket_id"])
+        self.persistent.save_session(sess)
+        return saved
+
+    def _can_access(self, ticket: Dict[str, Any]) -> bool:
+        sess = self.current_session
+        if sess is None:
+            return False
+        if ticket.get("student_id"):
+            return sess.user_id is not None and ticket["student_id"] == sess.user_id
+        return ticket.get("session_id") == sess.session_id  # unowned: same session only
+
+    def get_ticket(self, ticket_id: str) -> Optional[Dict[str, Any]]:
+        """Return a ticket only if it belongs to the current student/session, else None.
+
+        Knowing a ticket ID alone is not enough.
+        """
+        ticket = self.persistent.get_ticket(ticket_id)
+        return ticket if ticket and self._can_access(ticket) else None
+
+    # ---------------------------------------------------------- preferences
+    def set_preference(self, key: str, value: Any, approved: bool = False) -> bool:
+        """Set a preference for this session; persist only if approved and the
+        session has a user_id. Returns True if it was persisted."""
+        sess = self.current_session
+        if sess is None:
+            return False
+        sess.preferences[key] = value
+        if approved and sess.user_id:
+            return self.persistent.save_preference(sess.user_id, key, value, approved=True)
         return False
 
-    def end_session(self):
-        """
-        Persist the current session to the database and clear it from memory.
-        Call this when the conversation ends (user says 'exit', timeout, etc.).
-        """
-        if self.current_session:
-            self.persistent.save_session(self.current_session)
-            self.current_session = None
-
-    # ------------------------------------------------------------------
-    # Ticket operations
-    # ------------------------------------------------------------------
-
-    def save_ticket(self, ticket: dict):
-        """
-        Save a ticket to persistent memory and link it to the current session.
-
-        Also updates the current session's active case to this ticket_id,
-        so the session record remembers what ticket was created.
-
-        ticket must contain at minimum:
-            ticket_id, student_name, issue_summary, created_at, updated_at
-        """
-        session_id = (
-            self.current_session.session_id if self.current_session else None
-        )
-        self.persistent.save_ticket(ticket, session_id=session_id)
-
-        # Update the current session's active case
-        if self.current_session:
-            self.current_session.set_current_case(ticket["ticket_id"])
-
-    def get_ticket(self, ticket_id: str) -> dict | None:
-        """Retrieve a ticket by ID. Returns None if not found."""
-        return self.persistent.get_ticket(ticket_id)
-
-    # ------------------------------------------------------------------
-    # Memory context for prompt injection
-    # ------------------------------------------------------------------
-
-    def get_memory_context(self, user_id: str) -> str:
-        """
-        Build a concise memory context string for injection into the
-        agent's planning prompt.
-
-        Format:
-            MEMORY CONTEXT:
-            Prior tickets: 2
-              - TICKET-0001: Cannot access registration portal (open, created 2026-10-05)
-              - TICKET-0002: Exam schedule question (closed, created 2026-09-28)
-
-        Returns an empty string if:
-          - user_id is None
-          - No tickets found for this student
-        Limits output to MAX_CONTEXT_TICKETS (default 3) to avoid
-        overflowing the prompt with stale context.
-        """
-        if not user_id:
+    # -------------------------------------------------------------- context
+    def get_memory_context(self, user_id: Optional[str]) -> str:
+        """Concise text for the planner prompt. Empty unless the active session
+        belongs to exactly this user_id. Only that student's records are used."""
+        sess = self.current_session
+        if not user_id or sess is None or sess.user_id != user_id:
             return ""
-
         tickets = self.persistent.get_tickets_by_student(user_id)
-        if not tickets:
+        prefs = self.persistent.get_preferences(user_id)
+        if not tickets and not prefs and not sess.current_case:
             return ""
-
-        # Truncate to the most recent MAX_CONTEXT_TICKETS
-        recent = tickets[:MAX_CONTEXT_TICKETS]
-
-        lines = ["MEMORY CONTEXT:", f"Prior tickets: {len(tickets)}"]
-        for t in recent:
-            date_str = t.get("created_at", "")[:10]  # YYYY-MM-DD
-            lines.append(
-                f"  - {t['ticket_id']}: {t['issue_summary']} ({t['status']}, created {date_str})"
-            )
-
-        if len(tickets) > MAX_CONTEXT_TICKETS:
-            lines.append(
-                f"  ... and {len(tickets) - MAX_CONTEXT_TICKETS} older ticket(s) not shown"
-            )
-
+        lines = []
+        if tickets:
+            lines.append(f"Prior tickets for this student: {len(tickets)}")
+            for t in tickets[:MAX_CONTEXT_TICKETS]:
+                summary = t["issue_summary"]
+                if len(summary) > MAX_SUMMARY_CHARS:
+                    summary = summary[:MAX_SUMMARY_CHARS - 3] + "..."
+                lines.append(
+                    f"- {t['ticket_id']}: {summary} (status: {t['status']}, "
+                    f"category: {t['category']}, created: {t['created_at'][:10]})"
+                )
+        if sess.current_case:
+            lines.append(f"Active case this session: {sess.current_case}")
+        if prefs:
+            lines.append("Approved preferences: " + ", ".join(f"{k}={v}" for k, v in prefs.items()))
+        lines.append("Note: remembered context only. Confirm with the student before treating a new issue as the same as a prior one.")
         return "\n".join(lines)
 
-    # ------------------------------------------------------------------
-    # Privacy — Right to be Forgotten
-    # ------------------------------------------------------------------
-
-    def delete_all_data(self, user_id: str) -> dict:
-        """
-        Permanently delete all data for a student (right to be forgotten).
-
-        Removes:
-          - All tickets in case_history for this student
-          - All sessions for this student
-          - All preferences for this student
-
-        Returns a summary dict with counts of deleted records.
-        Also clears the current session if it belongs to this user.
-        """
-        # Gather tickets first so we can delete them individually
-        tickets = self.persistent.get_tickets_by_student(user_id)
-        deleted_tickets = 0
-        for ticket in tickets:
-            if self.persistent.delete_ticket(ticket["ticket_id"]):
-                deleted_tickets += 1
-
-        deleted_sessions = self.persistent.delete_sessions(user_id)
-        deleted_prefs = self.persistent.delete_preferences(user_id)
-
-        # Clear the active session if it belongs to this user
-        if self.current_session and self.current_session.user_id == user_id:
-            self.current_session = None
-
+    # ------------------------------------------------------------- retention
+    def purge_expired(self) -> Dict[str, int]:
+        """Apply retention: sessions > 30d, open tickets > 90d, closed > 1y."""
         return {
-            "deleted_tickets": deleted_tickets,
-            "deleted_sessions": deleted_sessions,
-            "deleted_preferences": deleted_prefs,
-            "user_id": user_id,
+            "sessions": self.persistent.purge_old_sessions(),
+            "tickets": self.persistent.purge_expired_tickets(),
         }
 
-    # ------------------------------------------------------------------
-    # Preference pass-throughs
-    # ------------------------------------------------------------------
+    # -------------------------------------------------------------- deletion
+    def delete_session_data(self) -> bool:
+        """Delete ONLY the active session record (tickets and preferences remain)."""
+        sess = self.current_session
+        if sess is None:
+            return False
+        ok = self.persistent.delete_session(sess.session_id)
+        self.current_session = None
+        return ok
 
-    def save_preference(self, user_id: str, key: str, value, approved: bool = True):
-        """Save an approved user preference to persistent memory."""
-        self.persistent.save_preference(user_id, key, value, approved=approved)
+    def delete_ticket(self, ticket_id: str) -> bool:
+        """Delete ONE ticket, only if the current student/session may access it."""
+        return self.get_ticket(ticket_id) is not None and self.persistent.delete_ticket(ticket_id)
 
-    def get_preferences(self, user_id: str) -> dict:
-        """Retrieve all approved preferences for a user."""
-        return self.persistent.get_preferences(user_id)
+    def delete_all_data(self, user_id: str) -> Dict[str, int]:
+        """Right to be forgotten: delete this student's tickets, sessions and
+        preferences from memory. Allowed only for the active session's own user.
 
-    # ------------------------------------------------------------------
-    # Maintenance
-    # ------------------------------------------------------------------
-
-    def purge_expired_data(self):
+        Does NOT touch data/support_tickets.json (the ticket tool's own store).
         """
-        Run all retention-policy purges:
-          - Sessions inactive > 30 days
-          - Open tickets > 90 days old
-          - Closed tickets > 1 year old
-
-        Returns a summary of what was removed.
-        """
-        purged_sessions = self.persistent.purge_old_sessions(days=30)
-        purged_open = self.persistent.purge_old_tickets(status="open", days=90)
-        purged_closed = self.persistent.purge_old_tickets(status="closed", days=365)
-        return {
-            "purged_sessions": purged_sessions,
-            "purged_open_tickets": purged_open,
-            "purged_closed_tickets": purged_closed,
-        }
-
-    def get_stats(self) -> dict:
-        """Return database statistics for monitoring/debugging."""
-        stats = self.persistent.get_stats()
-        stats["active_session"] = (
-            self.current_session.session_id if self.current_session else None
-        )
-        return stats
-
-    def __repr__(self) -> str:
-        session_info = (
-            self.current_session.session_id if self.current_session else "None"
-        )
-        return f"MemoryManager(db={self.persistent.db_path!r}, session={session_info})"
+        sess = self.current_session
+        if not user_id or sess is None or sess.user_id != user_id:
+            return {"tickets": 0, "sessions": 0, "preferences": 0, "denied": 1}
+        counts = self.persistent.delete_user_data(user_id)
+        self.current_session = None
+        return counts

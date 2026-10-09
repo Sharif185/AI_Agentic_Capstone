@@ -2,8 +2,9 @@ from agent.state import AgentState
 from agent.stop_conditions import StopConditions
 from agent.tracer import Tracer
 
-# Week 6: added check_ticket_status to approved tools
-APPROVED_TOOLS = {"get_course_info", "create_support_ticket", "check_ticket_status"}
+# Week 5's approved tool list (Section 8 of the brief). The agent refuses
+# to call anything outside this set, even if the planner asks for it.
+APPROVED_TOOLS = {"get_course_info", "create_support_ticket"}
 AVAILABLE_ACTIONS = {"rag_retrieve", "call_tool", "answer", "stop"}
 
 _GENERIC_STOP_MESSAGES = {
@@ -21,19 +22,22 @@ class StudentSupportAgent:
     Bounded, goal-directed orchestrator implementing
     Sense -> Plan -> Act -> Observe -> Evaluate.
 
-    Week 6 addition: accepts an optional memory_manager that loads
-    prior ticket context before each run and saves new tickets
-    automatically via the updated TicketTool.
+    Integrates ModelClient, RAGPipeline, ToolExecutor (which itself owns
+    ApprovalController), Planner, StopConditions, Tracer, and AgentState.
+    This class never bypasses ToolExecutor/ApprovalController, never calls
+    a tool outside APPROVED_TOOLS, and never continues past the configured
+    limits — those guarantees hold regardless of what the planner returns.
     """
 
     def __init__(self, model_client, rag_pipeline, tool_executor, planner,
-                 memory_manager=None, max_iterations=5, max_tool_calls=3,
-                 max_rag_calls=2, trace_dir="evidence/traces"):
+                 max_iterations=5, max_tool_calls=3, max_rag_calls=2,
+                 trace_dir="evidence/traces", memory_manager=None):
+        # memory_manager is OPTIONAL (Week 6). With None the agent behaves exactly as in Week 5.
+        self.memory = memory_manager
         self.model = model_client
         self.rag = rag_pipeline
         self.tool_executor = tool_executor
         self.planner = planner
-        self.memory = memory_manager      # Week 6: optional MemoryManager
         self.max_iterations = max_iterations
         self.trace_dir = trace_dir
         self.stop_conditions = StopConditions(
@@ -49,11 +53,7 @@ class StudentSupportAgent:
         Returns {"response", "state", "trace_file", "iterations", "stop_reason"}.
         """
         state = AgentState(goal, max_iterations=self.max_iterations, student_name=student_name)
-
-        # Week 6: inject memory context into state before planning starts
-        if self.memory and user_id:
-            state.memory_context = self.memory.get_memory_context(user_id)
-
+        state.memory_context = self._load_memory_context(user_id)
         tracer = Tracer(goal, trace_dir=self.trace_dir)
 
         while True:
@@ -104,6 +104,19 @@ class StudentSupportAgent:
             "iterations": state.iteration,
             "stop_reason": state.stop_reason,
         }
+
+    def _load_memory_context(self, user_id):
+        """Remembered context for this student, or "" (no memory, no user_id, nothing stored,
+        or any memory error). Memory is assistive: a failure here never stops the run."""
+        if self.memory is None:
+            return ""
+        try:
+            self.memory.record_turn()
+            if not user_id:
+                return ""
+            return self.memory.get_memory_context(user_id) or ""
+        except Exception:
+            return ""
 
     # ------------------------------------------------------------------
     # ACT helpers
