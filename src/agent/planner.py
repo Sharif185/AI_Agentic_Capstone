@@ -65,11 +65,15 @@ AVAILABLE ACTIONS:
    - Create a support ticket (requires human approval)
    - Use when the issue cannot be resolved with available information
  
-4. {{"action": "answer", "text": "..."}}
+4. {{"action": "call_tool", "tool": "check_ticket_status", "arguments": {{"ticket_id": "..."}}}}
+   - Check the status of a previously created ticket
+   - Use when the student asks about a prior ticket
+ 
+5. {{"action": "answer", "text": "..."}}
    - Provide the final answer to the student
    - Use when you have enough information to resolve the issue
  
-5. {{"action": "stop", "reason": "..."}}
+6. {{"action": "stop", "reason": "..."}}
    - Stop the loop without a final answer
    - Use when you cannot make progress
  
