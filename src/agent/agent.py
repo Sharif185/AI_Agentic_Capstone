@@ -31,7 +31,9 @@ class StudentSupportAgent:
 
     def __init__(self, model_client, rag_pipeline, tool_executor, planner,
                  max_iterations=5, max_tool_calls=3, max_rag_calls=2,
-                 trace_dir="evidence/traces"):
+                 trace_dir="evidence/traces", memory_manager=None):
+        # memory_manager is OPTIONAL (Week 6). With None the agent behaves exactly as in Week 5.
+        self.memory = memory_manager
         self.model = model_client
         self.rag = rag_pipeline
         self.tool_executor = tool_executor
@@ -44,13 +46,14 @@ class StudentSupportAgent:
             max_rag_calls=max_rag_calls,
         )
 
-    def run(self, goal, student_name="Student"):
+    def run(self, goal, student_name="Student", user_id=None):
         """
         Run the bounded agent loop for one student goal.
 
         Returns {"response", "state", "trace_file", "iterations", "stop_reason"}.
         """
         state = AgentState(goal, max_iterations=self.max_iterations, student_name=student_name)
+        state.memory_context = self._load_memory_context(user_id)
         tracer = Tracer(goal, trace_dir=self.trace_dir)
 
         while True:
@@ -101,6 +104,19 @@ class StudentSupportAgent:
             "iterations": state.iteration,
             "stop_reason": state.stop_reason,
         }
+
+    def _load_memory_context(self, user_id):
+        """Remembered context for this student, or "" (no memory, no user_id, nothing stored,
+        or any memory error). Memory is assistive: a failure here never stops the run."""
+        if self.memory is None:
+            return ""
+        try:
+            self.memory.record_turn()
+            if not user_id:
+                return ""
+            return self.memory.get_memory_context(user_id) or ""
+        except Exception:
+            return ""
 
     # ------------------------------------------------------------------
     # ACT helpers

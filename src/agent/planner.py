@@ -12,7 +12,7 @@ AVAILABLE ACTIONS:
 - answer: give the final answer now, if you have enough information. action_input: {{"response": "<final answer text>"}}
 - stop: stop and hand off to a human, or ask the student to clarify, if the request is too vague or cannot be resolved. action_input: {{"response": "<message to the student>"}}
 
-HISTORY SO FAR (most recent last):
+{memory_section}HISTORY SO FAR (most recent last):
 {history}
 
 RULES:
@@ -58,6 +58,7 @@ class Planner:
         prompt = PLANNING_PROMPT_TEMPLATE.format(
             goal=state.goal,
             history=self._format_history(state),
+            memory_section=self._format_memory(state),
         )
 
         try:
@@ -82,58 +83,26 @@ class Planner:
                 "reason": "Planner could not parse decision",
                 "raw_response": response["response"]
             }
-    
-    def _build_plan_prompt(self, state):
-        """Build the planning prompt."""
-        history_summary = self._summarize_history(state)
-        
-        return f"""You are planning the next action for a student support agent.
- 
-GOAL: {state.goal}
- 
-CURRENT STATE:
-- Iteration: {state.iteration}/{state.max_iterations}
-- Tool calls made: {state.tool_call_count}
-- RAG calls made: {state.rag_call_count}
-- Human needed: {state.human_needed}
- 
-HISTORY:
-{history_summary}
- 
-AVAILABLE ACTIONS:
-1. {{"action": "rag_retrieve", "query": "..."}}
-   - Search the knowledge base for relevant documents
-   - Use when you need information from university documents
- 
-2. {{"action": "call_tool", "tool": "get_course_info", "arguments": {{"course_code": "...", "info_type": "..."}}}}
-   - Look up structured course information
-   - Use when you need prerequisites, credits, schedule, or description
- 
-3. {{"action": "call_tool", "tool": "create_support_ticket", "arguments": {{"student_name": "...", "issue_summary": "...", "priority": "..."}}}}
-   - Create a support ticket (requires human approval)
-   - Use when the issue cannot be resolved with available information
- 
-4. {{"action": "answer", "text": "..."}}
-   - Provide the final answer to the student
-   - Use when you have enough information to resolve the issue
- 
-5. {{"action": "stop", "reason": "..."}}
-   - Stop the loop without a final answer
-   - Use when you cannot make progress
- 
-RULES:
-- Do NOT repeat an action you've already taken with the same arguments
-- Do NOT exceed {{state.max_iterations}} total iterations
-- If 2+ actions have failed, consider answering or stopping
-- If the issue needs human help, create a ticket
-- If you have enough information, provide the answer
- 
-Respond with ONLY a JSON object, no other text.
- 
-DECISION:"""
-    
-    def _summarize_history(self, state):
-        """Create a readable summary of the history."""
+
+        decision.setdefault("action_input", {})
+        decision.setdefault("reasoning", "")
+        return decision
+
+    @staticmethod
+    def _format_memory(state):
+        """MEMORY CONTEXT block, or "" when empty. It is background only: the student's
+        current goal and the rules below always take precedence over it."""
+        memory = getattr(state, "memory_context", "") or ""
+        if not memory.strip():
+            return ""
+        return (
+            "MEMORY CONTEXT (remembered from earlier sessions; background only - the current goal "
+            "above takes precedence, and do not assume the current issue is the same as a prior one "
+            "without confirming with the student):\n" + memory.strip() + "\n\n"
+        )
+
+    @staticmethod
+    def _format_history(state, max_entries=10):
         if not state.history:
             return "(nothing yet)"
         lines = []
