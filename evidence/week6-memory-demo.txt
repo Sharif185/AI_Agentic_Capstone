@@ -1,0 +1,45 @@
+# Week 6 memory demo evidence
+# Command: python src/demo_memory.py
+# Generated: 2026-10-09T05:44Z in a Linux sandbox, Python 3.13 (re-run on your own machine to replace this)
+# Mock model only; no live AI call. Demo data only.
+
+==============================================================
+WEEK 6 MEMORY DEMO (demo data only, isolated DB: data/demo_memory.db)
+==============================================================
+
+--- SESSION 1: Student creates a ticket ---
+Session: SES-a42f3848
+Ticket stored: TICKET-0001 | Cannot access online registration portal | status=open
+  [PASS] Session ID has SES- prefix
+  [PASS] Ticket readable in Session 1
+[Session 1 ended; MemoryManager 1 discarded]
+
+--- SESSION 2: Student returns (NEW MemoryManager, same DB) ---
+Session: SES-71afeada
+  [PASS] Session 2 has a different session ID
+Memory context retrieved from the database:
+  Prior tickets for this student: 1
+  - TICKET-0001: Cannot access online registration portal (status: open, category: registration, created: 2026-10-08)
+  Note: remembered context only. Confirm with the student before treating a new issue as the same as a prior one.
+  [PASS] Ticket survived into Session 2
+  [PASS] Context references TICKET-0001
+
+Student: What's the status of my ticket?
+Reply (built from the stored record, no model call):
+  Your ticket TICKET-0001 about 'Cannot access online registration portal' is currently open. Created: 2026-10-08
+  [PASS] Reply reflects stored status 'open'
+
+--- Real agent receives the memory context (mock model, no live AI) ---
+  [PASS] Planner prompt has a MEMORY CONTEXT section
+  [PASS] Planner prompt contains TICKET-0001 and its summary
+
+--- Isolation: a different student ---
+  [PASS] Other student's context is empty
+  [PASS] Other student cannot read TICKET-0001 by ID
+  [PASS] Other student's planner prompt has no MEMORY CONTEXT / TICKET-0001
+  [PASS] Agent still works with memory_manager=None
+
+==============================================================
+RESULT: SUCCESS - the ticket persisted across separate sessions and managers;
+        the student did not need to re-explain the issue.
+==============================================================

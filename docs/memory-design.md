@@ -158,11 +158,11 @@ The agent must not create a ticket — and must not store any data — without t
 
 | Principle | Status |
 |-----------|--------|
-| No PII beyond student input | ✅ Only data the student provides is stored |
-| No third-party sharing | ✅ All data remains local |
-| No sensitive categories | ✅ Health, financial, and academic records are explicitly excluded |
-| Minimal retention | ✅ Retention periods defined and enforced (Section 5) |
-| Right to deletion | ✅ Deletion policy defined (Section 6) |
-| Student informed | ✅ Consent obtained before any data is stored (Section 9) |
+| No PII beyond student input |  Only data the student provides is stored |
+| No third-party sharing |  All data remains local |
+| No sensitive categories |  Health, financial, and academic records are explicitly excluded |
+| Minimal retention | Retention periods defined and enforced (Section 5) |
+| Right to deletion |  Deletion policy defined (Section 6) |
+| Student informed |  Consent obtained before any data is stored (Section 9) |
 
 > This document should be reviewed whenever the agent's data model, tools, or storage infrastructure changes. All revisions require sign-off from the project lead.
