@@ -80,8 +80,8 @@ class Planner:
             snippet = raw[:300].replace("\n", " ") if raw else "(empty response)"
             return {
                 "action": "stop",
-                "action_input": {"response": _FALLBACK_MESSAGE},
-                "reasoning": f"invalid_or_unparseable_planner_output: {snippet!r}",
+                "reason": "Planner could not parse decision",
+                "raw_response": response["response"]
             }
 
         decision.setdefault("action_input", {})
