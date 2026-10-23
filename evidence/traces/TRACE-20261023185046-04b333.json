@@ -1,0 +1,78 @@
+{
+  "trace_id": "TRACE-20261023185046-04b333",
+  "goal": "Tell me about the course.",
+  "started_at": "2026-10-23T18:50:46.539665+00:00",
+  "iterations": [
+    {
+      "iteration": 1,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "query 0"
+        },
+        "reasoning": "retrieval 0"
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "query 0",
+          "num_results": 1,
+          "sources": [
+            "stub.pdf"
+          ],
+          "context": "stub context",
+          "success": true,
+          "latency_ms": 0.0
+        }
+      },
+      "timestamp": "2026-10-23T18:50:46.541847+00:00"
+    },
+    {
+      "iteration": 2,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "query 1"
+        },
+        "reasoning": "retrieval 1"
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "query 1",
+          "num_results": 1,
+          "sources": [
+            "stub.pdf"
+          ],
+          "context": "stub context",
+          "success": true,
+          "latency_ms": 0.0
+        }
+      },
+      "timestamp": "2026-10-23T18:50:46.543077+00:00"
+    }
+  ],
+  "tool_calls": [],
+  "rag_calls": [
+    {
+      "query": "query 0",
+      "number_of_results": 1,
+      "sources": [
+        "stub.pdf"
+      ],
+      "timestamp": "2026-10-23T18:50:46.541847+00:00"
+    },
+    {
+      "query": "query 1",
+      "number_of_results": 1,
+      "sources": [
+        "stub.pdf"
+      ],
+      "timestamp": "2026-10-23T18:50:46.541847+00:00"
+    }
+  ],
+  "human_approvals": [],
+  "final_response": "I wasn't able to find a clear answer in the documents I have access to. Let me connect you with a human who can help further.",
+  "stop_reason": "max_rag_calls_reached",
+  "completed_at": "2026-10-23T18:50:46.543077+00:00"
+}

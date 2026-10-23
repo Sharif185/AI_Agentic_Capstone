@@ -1,0 +1,86 @@
+{
+  "trace_id": "TRACE-20261023185046-c8ddc9",
+  "goal": "Please create a ticket for me.",
+  "started_at": "2026-10-23T18:50:46.535066+00:00",
+  "iterations": [
+    {
+      "iteration": 1,
+      "plan": {
+        "action": "call_tool",
+        "action_input": {
+          "tool_name": "create_support_ticket",
+          "arguments": {
+            "student_name": "S",
+            "issue_summary": "x",
+            "priority": "low"
+          }
+        },
+        "reasoning": "call 0"
+      },
+      "action_taken": {
+        "action": "call_tool",
+        "observation": {
+          "success": true,
+          "result": "create_support_ticket executed"
+        }
+      },
+      "timestamp": "2026-10-23T18:50:46.537601+00:00"
+    },
+    {
+      "iteration": 2,
+      "plan": {
+        "action": "call_tool",
+        "action_input": {
+          "tool_name": "create_support_ticket",
+          "arguments": {
+            "student_name": "S",
+            "issue_summary": "x",
+            "priority": "low"
+          }
+        },
+        "reasoning": "call 1"
+      },
+      "action_taken": {
+        "action": "call_tool",
+        "observation": {
+          "success": true,
+          "result": "create_support_ticket executed"
+        }
+      },
+      "timestamp": "2026-10-23T18:50:46.537601+00:00"
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "create_support_ticket",
+      "arguments": {
+        "student_name": "S",
+        "issue_summary": "x",
+        "priority": "low"
+      },
+      "result": {
+        "success": true,
+        "result": "create_support_ticket executed"
+      },
+      "timestamp": "2026-10-23T18:50:46.537601+00:00"
+    },
+    {
+      "tool": "create_support_ticket",
+      "arguments": {
+        "student_name": "S",
+        "issue_summary": "x",
+        "priority": "low"
+      },
+      "result": {
+        "success": true,
+        "result": "create_support_ticket executed"
+      },
+      "timestamp": "2026-10-23T18:50:46.537601+00:00"
+    }
+  ],
+  "rag_calls": [],
+  "human_approvals": [],
+  "final_response": "I'm not finding new information to help with this. Could you give me a bit more detail, or I can connect you with a human?",
+  "stop_reason": "no_progress_detected",
+  "completed_at": "2026-10-23T18:50:46.537601+00:00"
+}

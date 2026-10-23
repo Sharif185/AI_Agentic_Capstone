@@ -1,0 +1,218 @@
+﻿python : test_input_refused_counts (test_guardrails.TestGuardrailManager) ... ok
+At line:1 char:1
++ python -m unittest discover -s tests -v 2>&1 | Out-File -FilePath "ev ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_input_refu...Manager) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_rate_limit_then_block (test_guardrails.TestGuardrailManager) ... ok
+test_summary (test_guardrails.TestGuardrailManager) ... ok
+test_tool_blocked_counts_and_no_execution (test_guardrails.TestGuardrailManager) ... ok
+test_empty_and_whitespace (test_guardrails.TestInputValidator) ... ok
+test_false_positive_not_blocked (test_guardrails.TestInputValidator) ... ok
+test_injection_case_insensitive (test_guardrails.TestInputValidator) ... ok
+test_length_boundary (test_guardrails.TestInputValidator) ... ok
+test_prohibited_is_refused_not_flagged (test_guardrails.TestInputValidator) ... ok
+test_valid (test_guardrails.TestInputValidator) ... ok
+test_iteration_boundary (test_guardrails.TestIterationLimiter) ... ok
+test_missing_state_attrs (test_guardrails.TestIterationLimiter) ... ok
+test_tool_and_rag_boundaries (test_guardrails.TestIterationLimiter) ... ok
+test_within_limits (test_guardrails.TestIterationLimiter) ... ok
+test_citation_present_ok (test_guardrails.TestOutputValidator) ... ok
+test_clean_response (test_guardrails.TestOutputValidator) ... ok
+test_hallucination_marker_flagged (test_guardrails.TestOutputValidator) ... ok
+test_missing_citation_flagged_when_sources_known (test_guardrails.TestOutputValidator) ... ok
+test_safe_fallback_not_flagged (test_guardrails.TestOutputValidator) ... ok
+test_only_three_tools (test_guardrails.TestToolAllowlist) ... ok
+test_per_tool_rate_limits (test_guardrails.TestToolAllowlist) ... ok
+test_reset (test_guardrails.TestToolAllowlist) ... ok
+test_ticket_requires_approval (test_guardrails.TestToolAllowlist) ... ok
+test_all_six_layers_emit_valid_jsonl (test_logger.TestAgentLogger) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.724737+00:00", "session_id": "TEST-SESSION", "event_type": "model_call", "data": {"model": 
+"m", "prompt_preview": "p", "response_preview": "r", "input_tokens": 1, "output_tokens": 2, "latency_ms": 3.0, 
+"success": true, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.724737+00:00", "session_id": "TEST-SESSION", "event_type": 
+"rag_retrieval", "data": {"query": "q", "num_results": 1, "sources": ["doc1"], "latency_ms": 5.0, "success": 
+true, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.724737+00:00", "session_id": "TEST-SESSION", "event_type": "tool_call", 
+"data": {"tool": "get_course_info", "arguments": {"code": "BSE4104"}, "success": true, "result_preview": "ok", 
+"latency_ms": 4.0, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.724737+00:00", "session_id": "TEST-SESSION", "event_type": "approval", 
+"data": {"tool": "create_support_ticket", "arguments": {}, "approved": true, "mode": "auto", "outcome": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.724737+00:00", "session_id": "TEST-SESSION", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "plan", "data_preview": "{'x': 1}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.724737+00:00", "session_id": "TEST-SESSION", "event_type": 
+"guardrail_trigger", "data": {"guardrail": "input", "input_preview": "bad", "reason": "injection", "decision": 
+"refuse"}}
+ok
+test_close_is_idempotent (test_logger.TestAgentLogger) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.737496+00:00", "session_id": "TEST-SESSION", "event_type": "error", "data": {"error_type": 
+"E", "message": "boom", "context": ""}}
+ok
+test_context_manager_closes_handlers (test_logger.TestAgentLogger) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.740231+00:00", "session_id": "CTX-TEST", "event_type": "error", "data": {"error_type": "E", 
+"message": "inside-with", "context": ""}}
+ok
+test_save_summary_writes_file (test_logger.TestAgentLogger) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.752452+00:00", "session_id": "TEST-SESSION", "event_type": "error", "data": {"error_type": 
+"E", "message": "boom", "context": ""}}
+ok
+test_second_logger_same_session_does_not_affect_first (test_logger.TestAgentLogger) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.765453+00:00", "session_id": "TEST-SESSION", "event_type": "error", "data": {"error_type": 
+"E", "message": "still-works", "context": ""}}
+ok
+test_sensitive_keys_redacted (test_logger.TestAgentLogger) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.776403+00:00", "session_id": "TEST-SESSION", "event_type": "tool_call", "data": {"tool": 
+"x", "arguments": {"password": "<redacted>", "api_key": "<redacted>"}, "success": true, "result_preview": "", 
+"latency_ms": null, "error": null}}
+ok
+test_summary_and_filter (test_logger.TestAgentLogger) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.787419+00:00", "session_id": "TEST-SESSION", "event_type": "error", "data": {"error_type": 
+"E", "message": "boom", "context": ""}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.787419+00:00", "session_id": "TEST-SESSION", "event_type": "error", 
+"data": {"error_type": "E", "message": "boom2", "context": ""}}
+ok
+test_agent_receives_memory (test_week6_memory.TestAgentIntegration) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.863376+00:00", "session_id": "LOG-20261023213402863376", "event_type": "agent_iteration", 
+"data": {"iteration": 0, "action": "start", "data_preview": "{'goal': 'status of my ticket?'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.872907+00:00", "session_id": "LOG-20261023213402863376", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "sense", "data_preview": "{'goal': 'status of my 
+ticket?'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.872907+00:00", "session_id": "LOG-20261023213402856101", "event_type": 
+"model_call", "data": {"model": "unknown", "prompt_preview": "You are the planning module of a bounded university 
+student-support agent.\nGiven the student's goal and everything done so far, decide the SINGLE next 
+action.\n\nSTUDENT GOAL:\nstatus of my ticket?\n\nAVAI", "response_preview": "{\"action\": \"answer\", 
+\"action_input\": {\"response\": \"ok\"}, \"reasoning\": \"t\"}", "input_tokens": null, "output_tokens": null, 
+"latency_ms": 0.0, "success": true, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.872907+00:00", "session_id": "LOG-20261023213402863376", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "plan", "data_preview": "{'action': 'answer', 
+'action_input': {'response': 'ok'}, 'reasoning': 't'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.872907+00:00", "session_id": "LOG-20261023213402863376", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "observe", "data_preview": "{'response': 'ok'}", "status": 
+null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.872907+00:00", "session_id": "LOG-20261023213402863376", "event_type": 
+"agent_stop", "data": {"reason": "goal_achieved", "iterations": 1, "tool_calls": 0, "rag_calls": 0}}
+ok
+test_agent_without_user_id_or_empty_memory (test_week6_memory.TestAgentIntegration) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.950025+00:00", "session_id": "LOG-20261023213402950025", "event_type": "agent_iteration", 
+"data": {"iteration": 0, "action": "start", "data_preview": "{'goal': 'hi'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.961806+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "sense", "data_preview": "{'goal': 'hi'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.961806+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"model_call", "data": {"model": "unknown", "prompt_preview": "You are the planning module of a bounded university 
+student-support agent.\nGiven the student's goal and everything done so far, decide the SINGLE next 
+action.\n\nSTUDENT GOAL:\nhi\n\nAVAILABLE ACTIONS:\n- r", "response_preview": "{\"action\": \"answer\", 
+\"action_input\": {\"response\": \"ok\"}, \"reasoning\": \"t\"}", "input_tokens": null, "output_tokens": null, 
+"latency_ms": 0.0, "success": true, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.963562+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "plan", "data_preview": "{'action': 'answer', 
+'action_input': {'response': 'ok'}, 'reasoning': 't'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.963562+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "observe", "data_preview": "{'response': 'ok'}", "status": 
+null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.963562+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_stop", "data": {"reason": "goal_achieved", "iterations": 1, "tool_calls": 0, "rag_calls": 0}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.965838+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_iteration", "data": {"iteration": 0, "action": "start", "data_preview": "{'goal': 'hi'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.977368+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "sense", "data_preview": "{'goal': 'hi'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.979687+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"model_call", "data": {"model": "unknown", "prompt_preview": "You are the planning module of a bounded university 
+student-support agent.\nGiven the student's goal and everything done so far, decide the SINGLE next 
+action.\n\nSTUDENT GOAL:\nhi\n\nAVAILABLE ACTIONS:\n- r", "response_preview": "{\"action\": \"answer\", 
+\"action_input\": {\"response\": \"ok\"}, \"reasoning\": \"t\"}", "input_tokens": null, "output_tokens": null, 
+"latency_ms": 0.0, "success": true, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.979687+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "plan", "data_preview": "{'action': 'answer', 
+'action_input': {'response': 'ok'}, 'reasoning': 't'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.979687+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "observe", "data_preview": "{'response': 'ok'}", "status": 
+null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.979687+00:00", "session_id": "LOG-20261023213402950025", "event_type": 
+"agent_stop", "data": {"reason": "goal_achieved", "iterations": 1, "tool_calls": 0, "rag_calls": 0}}
+ok
+test_agent_works_without_memory (test_week6_memory.TestAgentIntegration) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:02.992866+00:00", "session_id": "LOG-20261023213402991271", "event_type": "agent_iteration", 
+"data": {"iteration": 0, "action": "start", "data_preview": "{'goal': 'hello'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.994019+00:00", "session_id": "LOG-20261023213402991271", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "sense", "data_preview": "{'goal': 'hello'}", "status": 
+null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.994019+00:00", "session_id": "LOG-20261023213402987358", "event_type": 
+"model_call", "data": {"model": "unknown", "prompt_preview": "You are the planning module of a bounded university 
+student-support agent.\nGiven the student's goal and everything done so far, decide the SINGLE next 
+action.\n\nSTUDENT GOAL:\nhello\n\nAVAILABLE ACTIONS:\n", "response_preview": "{\"action\": \"answer\", 
+\"action_input\": {\"response\": \"ok\"}, \"reasoning\": \"t\"}", "input_tokens": null, "output_tokens": null, 
+"latency_ms": 0.0, "success": true, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.994019+00:00", "session_id": "LOG-20261023213402991271", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "plan", "data_preview": "{'action': 'answer', 
+'action_input': {'response': 'ok'}, 'reasoning': 't'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.994019+00:00", "session_id": "LOG-20261023213402991271", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "observe", "data_preview": "{'response': 'ok'}", "status": 
+null}}
+[INFO] {"timestamp": "2026-10-23T18:34:02.996351+00:00", "session_id": "LOG-20261023213402991271", "event_type": 
+"agent_stop", "data": {"reason": "goal_achieved", "iterations": 1, "tool_calls": 0, "rag_calls": 0}}
+ok
+test_memory_failure_does_not_break_agent (test_week6_memory.TestAgentIntegration) ... [INFO] {"timestamp": 
+"2026-10-23T18:34:03.003032+00:00", "session_id": "LOG-20261023213403003032", "event_type": "agent_iteration", 
+"data": {"iteration": 0, "action": "start", "data_preview": "{'goal': 'hi'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:03.005892+00:00", "session_id": "LOG-20261023213403003032", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "sense", "data_preview": "{'goal': 'hi'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:03.006339+00:00", "session_id": "LOG-20261023213402996351", "event_type": 
+"model_call", "data": {"model": "unknown", "prompt_preview": "You are the planning module of a bounded university 
+student-support agent.\nGiven the student's goal and everything done so far, decide the SINGLE next 
+action.\n\nSTUDENT GOAL:\nhi\n\nAVAILABLE ACTIONS:\n- r", "response_preview": "{\"action\": \"answer\", 
+\"action_input\": {\"response\": \"ok\"}, \"reasoning\": \"t\"}", "input_tokens": null, "output_tokens": null, 
+"latency_ms": 0.0, "success": true, "error": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:03.006339+00:00", "session_id": "LOG-20261023213403003032", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "plan", "data_preview": "{'action': 'answer', 
+'action_input': {'response': 'ok'}, 'reasoning': 't'}", "status": null}}
+[INFO] {"timestamp": "2026-10-23T18:34:03.007424+00:00", "session_id": "LOG-20261023213403003032", "event_type": 
+"agent_iteration", "data": {"iteration": 1, "action": "observe", "data_preview": "{'response': 'ok'}", "status": 
+null}}
+[INFO] {"timestamp": "2026-10-23T18:34:03.008112+00:00", "session_id": "LOG-20261023213403003032", "event_type": 
+"agent_stop", "data": {"reason": "goal_achieved", "iterations": 1, "tool_calls": 0, "rag_calls": 0}}
+ok
+test_planner_prompt_empty_and_populated (test_week6_memory.TestAgentIntegration) ... ok
+test_delete_all_data (test_week6_memory.TestDeletion) ... ok
+test_delete_all_denied_for_other_user (test_week6_memory.TestDeletion) ... ok
+test_delete_session_only (test_week6_memory.TestDeletion) ... ok
+test_delete_ticket_only (test_week6_memory.TestDeletion) ... ok
+test_demo_passes (test_week6_memory.TestDemoScript) ... ok
+test_context_requires_matching_active_session (test_week6_memory.TestIsolationAndContext) ... ok
+test_empty_memory_context (test_week6_memory.TestIsolationAndContext) ... ok
+test_isolation (test_week6_memory.TestIsolationAndContext) ... ok
+test_mismatched_student_id_rejected (test_week6_memory.TestIsolationAndContext) ... ok
+test_unowned_ticket_same_session_only (test_week6_memory.TestIsolationAndContext) ... ok
+test_db_path_without_directory (test_week6_memory.TestPersistence) ... ok
+test_missing_records_safe (test_week6_memory.TestPersistence) ... ok
+test_multiple_tickets_per_student (test_week6_memory.TestPersistence) ... ok
+test_repeat_save_no_duplicate (test_week6_memory.TestPersistence) ... ok
+test_save_get_and_restart (test_week6_memory.TestPersistence) ... ok
+test_sql_injection_is_inert (test_week6_memory.TestPersistence) ... ok
+test_ticket_id_cannot_overwrite_other_student (test_week6_memory.TestPersistence) ... ok
+test_approved_preference_persists (test_week6_memory.TestPreferencesAndPrivacy) ... ok
+test_no_transcript_columns (test_week6_memory.TestPreferencesAndPrivacy) ... ok
+test_prohibited_preferences_rejected (test_week6_memory.TestPreferencesAndPrivacy) ... ok
+test_store_level_rejects_unapproved (test_week6_memory.TestPreferencesAndPrivacy) ... ok
+test_ticket_text_redacted_and_extras_dropped (test_week6_memory.TestPreferencesAndPrivacy) ... ok
+test_unapproved_preference_not_persisted (test_week6_memory.TestPreferencesAndPrivacy) ... ok
+test_resume_session (test_week6_memory.TestRetention) ... ok
+test_sessions_purged_after_30_days (test_week6_memory.TestRetention) ... ok
+test_start_session_enforces_retention (test_week6_memory.TestRetention) ... ok
+test_ticket_retention_active_90_closed_365 (test_week6_memory.TestRetention) ... ok
+test_expiry (test_week6_memory.TestSessionState) ... ok
+test_from_dict_invalid_fields (test_week6_memory.TestSessionState) ... ok
+test_id_prefix_and_uniqueness (test_week6_memory.TestSessionState) ... ok
+test_roundtrip (test_week6_memory.TestSessionState) ... ok
+test_touch_and_case (test_week6_memory.TestSessionState) ... ok
+test_denied_approval_saves_nothing (test_week6_memory.TestTicketToolMemory) ... ok
+test_memory_failure_keeps_ticket (test_week6_memory.TestTicketToolMemory) ... ok
+test_status_lookup_contract (test_week6_memory.TestTicketToolMemory)
+Interface Louis's TicketStatusTool expects: memory.get_ticket(id) -> dict with these keys. ... ok
+test_ticket_saved_to_memory_once (test_week6_memory.TestTicketToolMemory) ... ok
+test_without_memory_unchanged (test_week6_memory.TestTicketToolMemory) ... ok
+
+----------------------------------------------------------------------
+Ran 72 tests in 3.655s
+
+OK

@@ -6,12 +6,19 @@ readable text on the console.
 
 Privacy: a small set of sensitive keys is redacted at emit-time. Do not
 log full API keys, passwords, tokens, credentials, or full student records.
+
+Lifecycle: each AgentLogger instance owns its own logging.Logger, its own
+file handler and its own console handler. Call close() when the instance
+is finished (e.g. in test tearDown) so the file handle is released. On
+Windows, an open FileHandler locks its file and prevents its parent
+directory from being deleted.
 """
 from __future__ import annotations
 
 import json
 import logging
 import threading
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
@@ -26,11 +33,6 @@ _SENSITIVE_KEYS = {
 }
 
 _DEFAULT_PREVIEW_LEN = 200
-
-# Tracks which session_ids already have handlers attached so we don't
-# duplicate console/file output when a logger is constructed repeatedly.
-_HANDLER_REGISTRY_LOCK = threading.Lock()
-_REGISTERED_SESSIONS: Dict[str, bool] = {}
 
 
 def _utc_now_iso() -> str:
@@ -69,7 +71,9 @@ class AgentLogger:
     """Structured logger for all agent activities.
 
     Thread-safety: writes are serialised with an internal lock. Each
-    instance owns its own event list; no state is shared across sessions.
+    instance owns its own `logging.Logger`, handlers and event list; two
+    instances with the same session_id write to the same log file in
+    append mode but do not share in-memory state.
     """
 
     def __init__(self, log_dir: str | Path = "logs", session_id: Optional[str] = None) -> None:
@@ -79,24 +83,60 @@ class AgentLogger:
         self.log_file = self.log_dir / f"{self.session_id}.log"
 
         self._lock = threading.Lock()
+        self._closed = False
         self.events: List[Dict[str, Any]] = []
 
-        self._logger = logging.getLogger(f"agent.{self.session_id}")
+        # Per-instance logger name. The uuid suffix guarantees isolation
+        # between two AgentLogger instances that use the same session_id
+        # (e.g. two tests running in the same process, two runs appending
+        # to the same log file). No module-global registry is involved.
+        self._logger = logging.getLogger(
+            f"agent.{self.session_id}.{uuid.uuid4().hex[:8]}"
+        )
         self._logger.setLevel(logging.INFO)
-        self._logger.propagate = False  # don't leak to root logger
+        self._logger.propagate = False  # never leak to the root logger
 
-        with _HANDLER_REGISTRY_LOCK:
-            already = _REGISTERED_SESSIONS.get(self.session_id, False)
-            if not already:
-                fh = logging.FileHandler(self.log_file, encoding="utf-8")
-                fh.setFormatter(logging.Formatter("%(message)s"))
-                self._logger.addHandler(fh)
+        fh = logging.FileHandler(self.log_file, encoding="utf-8", mode="a")
+        fh.setFormatter(logging.Formatter("%(message)s"))
+        self._logger.addHandler(fh)
 
-                ch = logging.StreamHandler()
-                ch.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
-                self._logger.addHandler(ch)
+        ch = logging.StreamHandler()
+        ch.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
+        self._logger.addHandler(ch)
 
-                _REGISTERED_SESSIONS[self.session_id] = True
+    # ------------------------------------------------------------------ #
+    # Lifecycle
+    # ------------------------------------------------------------------ #
+    def close(self) -> None:
+        """Flush and detach all handlers so the log file is released.
+
+        Required on Windows: an open FileHandler locks its file and
+        prevents the parent directory from being removed. Safe to call
+        multiple times.
+        """
+        if self._closed:
+            return
+        self._closed = True
+        for handler in list(self._logger.handlers):
+            try:
+                handler.flush()
+            except Exception:
+                pass
+            try:
+                handler.close()
+            except Exception:
+                pass
+            try:
+                self._logger.removeHandler(handler)
+            except Exception:
+                pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
 
     # ------------------------------------------------------------------ #
     # Core emit
@@ -111,7 +151,6 @@ class AgentLogger:
         try:
             line = json.dumps(event, ensure_ascii=False, default=str)
         except (TypeError, ValueError) as exc:
-            # Never lose the event silently; emit a minimal fallback.
             line = json.dumps({
                 "timestamp": event["timestamp"],
                 "session_id": self.session_id,
@@ -121,11 +160,11 @@ class AgentLogger:
 
         with self._lock:
             self.events.append(event)
-            try:
-                self._logger.info(line)
-            except Exception as exc:  # pragma: no cover - defensive
-                # Logging failure should not silently pass.
-                print(f"[AgentLogger] write failed: {exc}")
+            if not self._closed:
+                try:
+                    self._logger.info(line)
+                except Exception as exc:  # pragma: no cover - defensive
+                    print(f"[AgentLogger] write failed: {exc}")
         return event
 
     # ------------------------------------------------------------------ #
