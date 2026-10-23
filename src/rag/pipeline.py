@@ -12,7 +12,7 @@ from .document_loader import DocumentLoader
 from .chunker import DocumentChunker
 from .vector_store import VectorStore
 from .retriever import Retriever
-
+import time
 
 class RAGPipeline:
     """Complete RAG pipeline.

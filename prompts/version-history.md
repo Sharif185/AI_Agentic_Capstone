@@ -9,7 +9,7 @@
 | **v3.0** | 24 Sept 2026 | Louis  | Added tool orchestration — AVAILABLE TOOLS section, TOOL SELECTION GUIDELINES, tool result handling in output format; added `create_support_ticket` and `get_course_info` | Week 4 agent tool calling requires prompt to specify available tools and selection criteria |
 | **v4.0** | 5 Oct 2026   | Louis  | Added MEMORY CONTEXT: `{session_context}` placeholder; added `check_ticket_status` to AVAILABLE TOOLS; added MEMORY RULES section (assistive only, never control grades/fees); explicit boundary: memory never overrides current session | Week 6 adds persistent memory — prompt must declare memory context, expose the new tool, and enforce usage boundaries |
 | **v4.1** | 7 Oct 2026   | Louis  | Replaced `{session_context}` with `{memory_context}` (explicit name); added HOW TO USE MEMORY section with concrete rules for multi-ticket disambiguation; added MEMORY BOUNDARIES block with stale-ticket handling; clarified all four tool selection conditions for `check_ticket_status` | Memory integration requires explicit, concrete handling rules for the agent to use memory correctly without over-relying on it |
-
+| **v5.0** | 13 Oct 2026 | Louis | Added CRITICAL SAFETY RULES: role-lock, explicit injection-refusal patterns, prohibited-actions list, grounding rule, memory-boundary restatement; same rules added to `PLANNING_PROMPT_TEMPLATE` in `src/agent/planner.py` | Week 7 requires demonstrable prompt-injection defenses; no code loads the prompt files, so the rules must also live in the planner prompt |
 ---
 
 ### Version Outcomes
@@ -23,7 +23,7 @@
 | v3.0 | Week 4 tool calling | Two tools exposed via prompt |
 | v4.0 | Week 6 memory design | Memory context + boundaries (Day 1) |
 | v4.1 | Week 6 memory integration | Concrete memory rules + disambiguation (Day 3) |
-
+| v5.0 | Week 7 safety hardening | Injection refusal, prohibited actions, grounding rules (effect measured in the Week 7 evaluation) |
 ---
 
 ### Prompt Files
@@ -37,3 +37,4 @@
 | v3.0 | `prompts/system-prompt-v3.0.txt` |
 | v4.0 | `prompts/agent-system-prompt-v4.0.txt` |
 | v4.1 | `prompts/agent-system-prompt-v4.1.txt` |
+| v5.0 | `prompts/agent-system-prompt-v5.0.txt` |

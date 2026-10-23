@@ -12,25 +12,10 @@ from .approval_controller import ApprovalController
 
 
 class ToolExecutor:
-    """Validates and executes tool calls.
-
-    Week 7 change: every invocation attempt emits a `tool_call` event
-    (success, validation failure, approval denial, tool-not-found, or
-    exception) with the tool name, sanitised arguments, latency and a
-    safe result preview. Approval decisions emit an `approval` event from
-    here because this is where approval actually happens — the agent
-    observes the result but does not re-log it.
-
-    `logs_tool_calls = True` and `logs_approvals = True` tell AgentLogger-
-    aware callers (agent.py) not to emit duplicate fallback events.
-    """
-
-    # Signals to AgentLogger-aware callers (agent.py) that this executor
-    # already emits its own tool_call and approval events.
-    logs_tool_calls = True
-    logs_approvals = True
-
+    """Validates and executes tool calls."""
+ 
     def __init__(self, tools, approval_controller=None, logger=None):
+
         """
         Args:
             tools: List of BaseTool instances
@@ -41,17 +26,8 @@ class ToolExecutor:
         self.tools = {tool.name: tool for tool in tools}
         self.approval = approval_controller or ApprovalController()
         self.execution_log = []
-
-        if logger is not None:
-            self.logger = logger
-        elif AgentLogger is not None:
-            self.logger = AgentLogger(log_dir="logs")
-        else:
-            self.logger = None
-
-    # ------------------------------------------------------------------ #
-    # public API (unchanged)
-    # ------------------------------------------------------------------ #
+        self.logger = logger
+    
     def get_tool_schemas(self):
         """Return OpenAI-compatible tool schemas."""
         return [tool.to_openai_schema() for tool in self.tools.values()]
