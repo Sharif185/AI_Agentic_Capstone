@@ -1,0 +1,70 @@
+{
+  "trace_id": "TRACE-20261016174952-f8b28d",
+  "goal": "When is the registration deadline?",
+  "started_at": "2026-10-16T17:49:52.748243+00:00",
+  "iterations": [
+    {
+      "iteration": 1,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "registration deadline"
+        },
+        "reasoning": "Search university documents to find the official registration deadline."
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "registration deadline",
+          "num_results": 0,
+          "sources": [],
+          "context": "No relevant documents found.",
+          "success": true,
+          "latency_ms": 1890.7198905944824
+        }
+      },
+      "timestamp": "2026-10-16T17:49:58.221492+00:00"
+    },
+    {
+      "iteration": 2,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "academic calendar registration dates"
+        },
+        "reasoning": "Try a broader search query in the documents for academic calendar and registration dates."
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "academic calendar registration dates",
+          "num_results": 0,
+          "sources": [],
+          "context": "No relevant documents found.",
+          "success": true,
+          "latency_ms": 523.468017578125
+        }
+      },
+      "timestamp": "2026-10-16T17:50:01.355824+00:00"
+    }
+  ],
+  "tool_calls": [],
+  "rag_calls": [
+    {
+      "query": "registration deadline",
+      "number_of_results": 0,
+      "sources": [],
+      "timestamp": "2026-10-16T17:49:58.221180+00:00"
+    },
+    {
+      "query": "academic calendar registration dates",
+      "number_of_results": 0,
+      "sources": [],
+      "timestamp": "2026-10-16T17:50:01.355282+00:00"
+    }
+  ],
+  "human_approvals": [],
+  "final_response": "I wasn't able to find a clear answer in the documents I have access to. Let me connect you with a human who can help further.",
+  "stop_reason": "max_rag_calls_reached",
+  "completed_at": "2026-10-16T17:50:01.356297+00:00"
+}

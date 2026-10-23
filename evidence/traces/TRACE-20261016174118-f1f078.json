@@ -1,0 +1,70 @@
+{
+  "trace_id": "TRACE-20261016174118-f1f078",
+  "goal": "When is the registration deadline?",
+  "started_at": "2026-10-16T17:41:18.380141+00:00",
+  "iterations": [
+    {
+      "iteration": 1,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "registration deadline"
+        },
+        "reasoning": "Search university documents for general registration deadline information."
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "registration deadline",
+          "num_results": 0,
+          "sources": [],
+          "context": "No relevant documents found.",
+          "success": true,
+          "latency_ms": 2588.6223316192627
+        }
+      },
+      "timestamp": "2026-10-16T17:41:23.660731+00:00"
+    },
+    {
+      "iteration": 2,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "academic calendar key dates enrollment registration deadline"
+        },
+        "reasoning": "Try a broader search query for academic calendar deadlines since the initial search yielded no results."
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "academic calendar key dates enrollment registration deadline",
+          "num_results": 0,
+          "sources": [],
+          "context": "No relevant documents found.",
+          "success": true,
+          "latency_ms": 432.5451850891113
+        }
+      },
+      "timestamp": "2026-10-16T17:41:25.574850+00:00"
+    }
+  ],
+  "tool_calls": [],
+  "rag_calls": [
+    {
+      "query": "registration deadline",
+      "number_of_results": 0,
+      "sources": [],
+      "timestamp": "2026-10-16T17:41:23.660563+00:00"
+    },
+    {
+      "query": "academic calendar key dates enrollment registration deadline",
+      "number_of_results": 0,
+      "sources": [],
+      "timestamp": "2026-10-16T17:41:25.573788+00:00"
+    }
+  ],
+  "human_approvals": [],
+  "final_response": "I wasn't able to find a clear answer in the documents I have access to. Let me connect you with a human who can help further.",
+  "stop_reason": "max_rag_calls_reached",
+  "completed_at": "2026-10-16T17:41:25.575736+00:00"
+}
