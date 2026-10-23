@@ -52,7 +52,7 @@ PROMPT_PATH = os.path.join(PROJECT_ROOT, "prompts", "system-prompt-v3.0.txt")
 def make_executor(auto_approve=True):
     """Build a fully configured ToolExecutor for end-to-end tests."""
     course_tool = CourseTool(data_path=COURSES_PATH)
-    ticket_tool = TicketTool(storage=TicketStorage(db_path=DB_PATH))
+    ticket_tool = TicketTool(storage_path=DB_PATH)
     approval = ApprovalController(auto_approve=auto_approve, interactive=False)
     return ToolExecutor(tools=[course_tool, ticket_tool], approval_controller=approval)
 

@@ -1,0 +1,70 @@
+{
+  "trace_id": "TRACE-20261023172657-edab18",
+  "goal": "When is the registration deadline?",
+  "started_at": "2026-10-23T17:26:57.816473+00:00",
+  "iterations": [
+    {
+      "iteration": 1,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "registration deadline"
+        },
+        "reasoning": "I need to search the university documents to find the registration deadline."
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "registration deadline",
+          "num_results": 0,
+          "sources": [],
+          "context": "No relevant documents found.",
+          "success": true,
+          "latency_ms": 13450.92511177063
+        }
+      },
+      "timestamp": "2026-10-23T17:27:16.409611+00:00"
+    },
+    {
+      "iteration": 2,
+      "plan": {
+        "action": "rag_retrieve",
+        "action_input": {
+          "query": "academic calendar key dates enrollment deadline"
+        },
+        "reasoning": "I will try a broader RAG search using terms related to the academic calendar and enrollment dates since the previous query returned no results."
+      },
+      "action_taken": {
+        "action": "rag_retrieve",
+        "observation": {
+          "query": "academic calendar key dates enrollment deadline",
+          "num_results": 0,
+          "sources": [],
+          "context": "No relevant documents found.",
+          "success": true,
+          "latency_ms": 528.6405086517334
+        }
+      },
+      "timestamp": "2026-10-23T17:27:18.669783+00:00"
+    }
+  ],
+  "tool_calls": [],
+  "rag_calls": [
+    {
+      "query": "registration deadline",
+      "number_of_results": 0,
+      "sources": [],
+      "timestamp": "2026-10-23T17:27:16.409199+00:00"
+    },
+    {
+      "query": "academic calendar key dates enrollment deadline",
+      "number_of_results": 0,
+      "sources": [],
+      "timestamp": "2026-10-23T17:27:18.668997+00:00"
+    }
+  ],
+  "human_approvals": [],
+  "final_response": "I wasn't able to find a clear answer in the documents I have access to. Let me connect you with a human who can help further.",
+  "stop_reason": "max_rag_calls_reached",
+  "completed_at": "2026-10-23T17:27:18.670324+00:00"
+}

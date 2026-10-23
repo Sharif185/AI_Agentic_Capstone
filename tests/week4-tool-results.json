@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-09-26T12:28:33.028068",
+  "run_at": "2026-10-23T21:00:05.196646",
   "summary": {
     "passed": 11,
     "failed": 0,
@@ -29,31 +29,31 @@
       "test_id": "TC-05",
       "description": "Invalid course code \u2192 tool-level 'not found'",
       "status": "PASS",
-      "details": "success=False, result_error=Course INVALID999 not found"
+      "details": "success=False, result_error=No course found with code 'INVALID999'."
     },
     {
       "test_id": "TC-06",
       "description": "Invalid info_type \u2192 tool-level enum error",
       "status": "PASS",
-      "details": "success=False, result_error=info_type must be one of: prerequisites, credits, schedule, description, all"
+      "details": "success=False, result_error=Invalid 'info_type': 'syllabus'. Must be one of: prerequisites, credits, schedule, description, all."
     },
     {
       "test_id": "TC-07",
       "description": "Issue summary > 500 chars \u2192 tool-level error",
       "status": "PASS",
-      "details": "success=False, result_error=issue_summary exceeds 500 characters"
+      "details": "success=False, result_error='issue_summary' is 501 characters, exceeding the 500-character limit."
     },
     {
       "test_id": "TC-08",
       "description": "Invalid priority enum \u2192 tool-level error",
       "status": "PASS",
-      "details": "success=False, result_error=priority must be low, medium, or high"
+      "details": "success=False, result_error=Invalid 'priority': 'urgent'. Must be one of: low, medium, high."
     },
     {
       "test_id": "TC-09",
       "description": "auto_approve=True \u2192 ticket created successfully",
       "status": "PASS",
-      "details": "success=True, ticket_id=TICKET-0002"
+      "details": "success=True, ticket_id=TCK-0002"
     },
     {
       "test_id": "TC-10",
@@ -65,7 +65,7 @@
       "test_id": "TC-12",
       "description": "Missing courses.json \u2192 'database unavailable'",
       "status": "PASS",
-      "details": "success=False, result_error=Course database unavailable"
+      "details": "success=False, result_error=Course database is unavailable (not found at 'data/nonexistent_courses.json')."
     },
     {
       "test_id": "TC-14",

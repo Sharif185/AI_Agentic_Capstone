@@ -1,16 +1,26 @@
 # Data
 data/tickets.db
 *.db
- 
+data/test_tickets*.json
+data/test_tool_output.json
+
 # Environment
 .env
- 
+
 # Vector store
 knowledge/vectordb/
- 
+
 # Python
 __pycache__/
 *.pyc
 venv/
 data/memory.db
 data/demo_memory.db
+
+# Logs (runtime output — not part of submission)
+logs/LOG-*.log
+logs/agent.log
+logs/evaluation/
+
+# Misc
+WEEK6-PLAN.md
