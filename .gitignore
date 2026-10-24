@@ -1,16 +1,19 @@
-# Data
-data/tickets.db
-*.db
- 
+﻿# Data
 # Environment
-.env
- 
-# Vector store
-knowledge/vectordb/
- 
 # Python
-__pycache__/
+# Vector store
+*.db
+*.log
 *.pyc
-venv/
+.env
+__pycache__/
+data/*.db
+data/demo_memory.dblogs/
 data/memory.db
-data/demo_memory.db
+data/tickets.db
+evaluation/results/
+evidence/traces/
+knowledge/vectordb/
+logs/
+src/logs/
+venv/

@@ -71,7 +71,10 @@ def print_result(result, log, scenario):
     print(f"  ITERATIONS: {result['iterations']}")
     print(f"  TRACE:      {result['trace_file']}")
     print(f"  LOG:        {log.log_file}")
-    passed = result["stop_reason"] == scenario["expected_stop_reason"]
+    expected = scenario["expected_stop_reason"]
+    if isinstance(expected, str):
+        expected = [expected]
+    passed = result["stop_reason"] in expected
     print(f"  RESULT:     [{'PASS' if passed else 'FAIL'}]")
     print("=" * 68)
     return passed
