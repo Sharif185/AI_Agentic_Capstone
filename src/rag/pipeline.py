@@ -12,7 +12,7 @@ from .document_loader import DocumentLoader
 from .chunker import DocumentChunker
 from .vector_store import VectorStore
 from .retriever import Retriever
-
+import time
 
 class RAGPipeline:
     """Complete RAG pipeline.
@@ -55,7 +55,7 @@ class RAGPipeline:
         documents = loader.load_all()
 
         # 2. Chunk documents
-        chunker = DocumentChunker(chunk_size=600, chunk_overlap=100)
+        chunker = DocumentChunker(chunk_size=1500, chunk_overlap=200)
         chunks = chunker.chunk(documents)
 
         # 3. Create vector store

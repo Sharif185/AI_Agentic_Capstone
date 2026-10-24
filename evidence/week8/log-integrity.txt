@@ -1,0 +1,82 @@
+﻿Scanning 62 log file(s) under C:\Users\LENOVO\Desktop\YEAR 4\Emerging_tech\AI_Capstone\AI_Agentic_Capstone\logs
+
+  [OK]   logs\acceptance\LOG-20261023215046521885.log
+  [OK]   logs\acceptance\LOG-20261023215046527645.log
+  [OK]   logs\acceptance\LOG-20261023215046532237.log
+  [OK]   logs\acceptance\LOG-20261023215046539665.log
+  [OK]   logs\acceptance\LOG-20261023215046543077.log
+  [OK]   logs\acceptance\LOG-20261023215046548018.log
+  [OK]   logs\acceptance\LOG-20261023215235712451.log
+  [OK]   logs\acceptance\LOG-20261023215235716463.log
+  [OK]   logs\acceptance\LOG-20261023215235721954.log
+  [OK]   logs\acceptance\LOG-20261023215235727725.log
+  [OK]   logs\acceptance\LOG-20261023215235731354.log
+  [OK]   logs\acceptance\LOG-20261023215235734414.log
+  [OK]   logs\coverage\COVERAGE-DEMO.log
+  [OK]   logs\LOG-20261016203211311850.log
+  [OK]   logs\LOG-20261016203211372364.log
+  [OK]   logs\LOG-20261016203211384862.log
+  [OK]   logs\LOG-20261023203635809459.log
+  [OK]   logs\LOG-20261023203635820926.log
+  [OK]   logs\LOG-20261023203635961928.log
+  [OK]   logs\LOG-20261023203635963323.log
+  [OK]   logs\LOG-20261023203635994618.log
+  [OK]   logs\LOG-20261023203636001932.log
+  [OK]   logs\LOG-20261023203636008653.log
+  [OK]   logs\LOG-20261023203636010420.log
+  [OK]   logs\LOG-20261023205529746401.log
+  [OK]   logs\LOG-20261023205529757442.log
+  [OK]   logs\LOG-20261023205529902922.log
+  [OK]   logs\LOG-20261023205529904938.log
+  [OK]   logs\LOG-20261023205529956150.log
+  [OK]   logs\LOG-20261023205529958196.log
+  [OK]   logs\LOG-20261023205529968710.log
+  [OK]   logs\LOG-20261023205529973272.log
+  [OK]   logs\LOG-20261023205529985118.log
+  [OK]   logs\LOG-20261023205529987137.log
+  [OK]   logs\LOG-20261023211614656225.log
+  [OK]   logs\LOG-20261023211614665262.log
+  [OK]   logs\LOG-20261023211614746206.log
+  [OK]   logs\LOG-20261023211614749017.log
+  [OK]   logs\LOG-20261023211614772017.log
+  [OK]   logs\LOG-20261023211614772640.log
+  [OK]   logs\LOG-20261023211614778054.log
+  [OK]   logs\LOG-20261023211614780359.log
+  [OK]   logs\LOG-20261023211614783731.log
+  [OK]   logs\LOG-20261023211614786001.log
+  [OK]   logs\LOG-20261023213011979699.log
+  [OK]   logs\LOG-20261023213011992732.log
+  [OK]   logs\LOG-20261023213012098755.log
+  [OK]   logs\LOG-20261023213012135797.log
+  [OK]   logs\LOG-20261023213012138347.log
+  [OK]   logs\LOG-20261023213012149401.log
+  [OK]   logs\LOG-20261023213012150348.log
+  [OK]   logs\LOG-20261023213012160377.log
+  [OK]   logs\LOG-20261023213012162531.log
+  [OK]   logs\LOG-20261023213402856101.log
+  [OK]   logs\LOG-20261023213402863376.log
+  [OK]   logs\LOG-20261023213402950025.log
+  [OK]   logs\LOG-20261023213402987358.log
+  [OK]   logs\LOG-20261023213402991271.log
+  [OK]   logs\LOG-20261023213402996351.log
+  [OK]   logs\LOG-20261023213403003032.log
+  [OK]   logs\LOG-20261023213403013604.log
+  [OK]   logs\LOG-20261023213403015619.log
+
+Total events scanned: 262
+Invalid JSON lines:   0
+Missing required fields: 0
+
+Layers seen:
+  + agent_iteration  [required]
+  + agent_stop  [bonus]
+  + approval  [required]
+  + error  [bonus]
+  + guardrail_trigger  [required]
+  + model_call  [required]
+  + rag_retrieval  [required]
+  + tool_call  [required]
+
+All 6 required layers present.
+
+RESULT: SUCCESS

@@ -1,0 +1,11 @@
+[33mtag v1.0.0[m
+Tagger: mus-khing <aloysiousmus18@gmail.com>
+Date:   Sat Oct 24 11:28:36 2026 +0300
+
+v1.0.0 — Student Support Agent: evaluation, guardrails, observability, demo
+
+[33mcommit 3b846b3c76fe05af9c9b646ac6b87bb74e2b7a3a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;33mtag: [m[1;33mv1.0.0[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: mus-khing <aloysiousmus18@gmail.com>
+Date:   Sat Oct 24 11:25:17 2026 +0300
+
+    release: v1.0.0 — Week 7 evaluation & guardrails + Week 8 release prep

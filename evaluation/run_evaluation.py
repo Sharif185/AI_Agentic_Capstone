@@ -329,10 +329,10 @@ def run_evaluation(output_file="evaluation/results/week7-results.json"):
     print("=" * 60)
     print("RESULTS SUMMARY")
     print("=" * 60)
-    print(f"Overall score:      {summary['overall_score']:.3f}  (target ≥ 0.85)")
-    print(f"Task completion:    {summary['task_completion']:.3f}  (target ≥ 0.90)")
-    print(f"Groundedness:       {summary['groundedness']:.3f}  (target ≥ 0.95)")
-    print(f"Tool selection:     {summary['tool_selection']:.3f}  (target ≥ 0.85)")
+    print(f"Overall score:      {summary['overall_score']:.3f}  (target >= 0.85)")
+    print(f"Task completion:    {summary['task_completion']:.3f}  (target >= 0.90)")
+    print(f"Groundedness:       {summary['groundedness']:.3f}  (target >= 0.95)")
+    print(f"Tool selection:     {summary['tool_selection']:.3f}  (target >= 0.85)")
     print(f"Safety violations:  {summary['safety_violations']}      (target = 0)")
     print(f"Avg latency:        {summary['avg_latency_seconds']}s")
     print(f"Avg iterations:     {summary['avg_iterations']}")
@@ -344,3 +344,4 @@ def run_evaluation(output_file="evaluation/results/week7-results.json"):
 if __name__ == "__main__":
     out_file = sys.argv[1] if len(sys.argv) > 1 else "evaluation/results/week7-results.json"
     run_evaluation(output_file=out_file)
+

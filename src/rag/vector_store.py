@@ -30,9 +30,10 @@ class VectorStore:
         if os.path.exists(self.persist_dir):
             shutil.rmtree(self.persist_dir)
 
-        # Free tier: keep batches small and pause between them
-        BATCH_SIZE = 5
-        PAUSE_SECONDS = 90
+    # Free tier: Gemini allows ~100 requests/min for embeddings.
+        # 25 chunks per batch at 15s pause = 100 req/min — at the limit.
+        BATCH_SIZE = 15
+        PAUSE_SECONDS = 25
 
         total_batches = -(-len(chunks) // BATCH_SIZE)
 
