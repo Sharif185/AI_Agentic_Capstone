@@ -11,6 +11,7 @@ knowledge/vectordb/
 # Python
 __pycache__/
 *.pyc
-venv/
+.venv/
 data/memory.db
 data/demo_memory.db
+venv/
